@@ -21,11 +21,11 @@ namespace SteamGamesInstaller
     public delegate void ComponentsCheckMethod(SteamGame game, DirectoryInfo[] directories);
     public delegate Int64 CalculateSizeMethod(SteamGame game, InstallOptions installOptions);
     public delegate void GameInstallMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker);
+    public delegate void FixesInstallMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker);
 
     public class SgiManager
     {
         private List<SteamGame> games;
-        private FileInfo installScript;
 
         # region Front end.
 
@@ -109,6 +109,7 @@ namespace SteamGamesInstaller
         /// Installs game with specified options.
         /// </summary>
         /// <param name="installOptions">Install options.</param>
+        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
         public void InstallGame(InstallOptions installOptions, BackgroundWorker worker)
         {
             if (installOptions == null)
@@ -117,7 +118,24 @@ namespace SteamGamesInstaller
             SteamGame game = GetGame(installOptions.GameName);
 
             if (game != null)
+            {
                 game.GameInstallMethod(game, installOptions, worker);
+
+
+                if (!installOptions.IsUseSteam && installOptions.IsUseInstallscript && game.Installscript != null)
+                {
+                    ValveDataFile vdf = new ValveDataFile(game.Installscript);
+
+                    vdf.BackgroundWorker = worker;
+                    vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOptions.InstallDirectory, game.InstallDirectory));
+                    vdf.GameLanguage = installOptions.Language.EnglishName;
+
+                    vdf.ExecuteScript();
+                }
+
+                if (installOptions.IsUseFix)
+                    game.FixesInstallMethod(game, installOptions, worker);
+            }
         }
 
         # endregion Front end.
@@ -130,7 +148,9 @@ namespace SteamGamesInstaller
         private void PopulateGamesList()
         {
             // The Elder Scrolls V: Skyrim
-            games.Add(new SteamGame(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", ComponentsCheckMethod72850, CalculateSizeMethod72850, GameInstallMethod72850));
+            games.Add(new SteamGame(72850, @"The Elder Scrolls V: Skyrim", @"common\Skyrim",
+                ComponentsCheckMethod72850, CalculateSizeMethod72850, GameInstallMethod72850, FixesInstallDefaultMethod));
+            games[games.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
             games[games.Count - 1].AddComponent(new GameComponent(72851, @"Skyrim Content", @"Skyrim Content", CultureInfo.InvariantCulture));
             games[games.Count - 1].AddComponent(new GameComponent(72852, @"Skyrim exe", @"Skyrim exe", CultureInfo.InvariantCulture));
             games[games.Count - 1].AddComponent(new GameComponent(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", CultureInfo.GetCultureInfo("en")));
@@ -198,19 +218,19 @@ namespace SteamGamesInstaller
             // Game specific checks
             // If you use CZECH or POLISH version also copy Skyrim - Voices.bsa and Skyrim - VoicesExtra.bsa files from skyrim english.v3\common\Skyrim\Data
             // folder to your SteamApps\common\Skyrim\Data folder.
-            GameComponent polish = game.GetComponentByAppId(72858);
-            GameComponent czech = game.GetComponentByAppId(72859);
+            GameComponent polish = game.GetComponentByCulture(CultureInfo.GetCultureInfo("pl"));
+            GameComponent czech = game.GetComponentByCulture(CultureInfo.GetCultureInfo("cs"));
 
             if (polish != null || czech != null)
             {
                 Boolean isSharedFilesExists = false;
-                GameComponent english = game.GetComponentByAppId(72853);
+                GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
 
                 if (english != null)
                 {
-                    DirectoryInfo englishDirectory = SgiUtils.GetLatestVersionDirectory(english);
-                    String file1 = @"common\Skyrim\Data\Skyrim - Voices.bsa";
-                    String file2 = @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa";
+                    DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                    String file1 = ((String[])game.CustomObject)[0];
+                    String file2 = ((String[])game.CustomObject)[1];
 
                     if (englishDirectory != null &&
                         File.Exists(Path.Combine(englishDirectory.FullName, file1)) && File.Exists(Path.Combine(englishDirectory.FullName, file2)))
@@ -260,19 +280,19 @@ namespace SteamGamesInstaller
                 if (CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("pl")) ||
                     CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("cs")))
                 {
-                    GameComponent english = game.GetComponentByAppId(72853);
+                    GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
 
                     if (english != null)
                     {
-                        DirectoryInfo englishDirectory = SgiUtils.GetLatestVersionDirectory(english);
-                        String file1 = @"common\Skyrim\Data\Skyrim - Voices.bsa";
-                        String file2 = @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa";
+                        DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                        String file1 = ((String[])game.CustomObject)[0];
+                        String file2 = ((String[])game.CustomObject)[1];
 
                         if (englishDirectory != null &&
                             File.Exists(Path.Combine(englishDirectory.FullName, file1)) && File.Exists(Path.Combine(englishDirectory.FullName, file2)))
                         {
-                            size += new FileInfo(Path.Combine(SgiUtils.GetLatestVersionDirectory(english).FullName, file1)).Length;
-                            size += new FileInfo(Path.Combine(SgiUtils.GetLatestVersionDirectory(english).FullName, file2)).Length;
+                            size += new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, file1)).Length;
+                            size += new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, file2)).Length;
                         }
                     }
 
@@ -292,13 +312,15 @@ namespace SteamGamesInstaller
         /// <param name="game">Steam game object.</param>
         /// <param name="installOptions">Install options object.</param>
         /// <returns>Size of copied files.</returns>
-        private Int64 GameInstallDefaultMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker, Int64 gameSize)
+        private static Int64 GameInstallDefaultMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker, Int64 gameSize)
         {
             DirectoryInfo[] directories = GetDirectoriesToInstall(game, installOptions);
             Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
             Int64 copiedFilesSize = 0;
             DirectoryInfo sourceDirectory;
             DirectoryInfo destDirectory;
+
+            game.Installscript = null;
 
             // Non-recursive algorithm
             foreach (DirectoryInfo componentDirectory in directories)
@@ -326,7 +348,7 @@ namespace SteamGamesInstaller
                         copiedFilesSize += CopyFile(file, Path.Combine(destDirectory.FullName, file.Name), worker, gameSize, copiedFilesSize);
 
                         if (String.Compare(file.Name, "installscript.vdf", StringComparison.OrdinalIgnoreCase) == 0)
-                            this.installScript = new FileInfo(Path.Combine(destDirectory.FullName, file.Name));
+                            game.Installscript = new FileInfo(Path.Combine(destDirectory.FullName, file.Name));
                     }
 
                     DirectoryInfo[] subDirectories = sourceDirectory.GetDirectories();
@@ -359,15 +381,15 @@ namespace SteamGamesInstaller
                 if (CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("pl")) ||
                     CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("cs")))
                 {
-                    GameComponent english = game.GetComponentByAppId(72853);
+                    GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
 
                     if (english != null)
                     {
-                        DirectoryInfo englishDirectory = SgiUtils.GetLatestVersionDirectory(english);
-                        String fileName1 = @"common\Skyrim\Data\Skyrim - Voices.bsa";
-                        String fileName2 = @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa";
-                        FileInfo file1 = new FileInfo(Path.Combine(SgiUtils.GetLatestVersionDirectory(english).FullName, fileName1));
-                        FileInfo file2 = new FileInfo(Path.Combine(SgiUtils.GetLatestVersionDirectory(english).FullName, fileName2));
+                        DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                        String fileName1 = ((String[])game.CustomObject)[0];
+                        String fileName2 = ((String[])game.CustomObject)[1];
+                        FileInfo file1 = new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, fileName1));
+                        FileInfo file2 = new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, fileName2));
 
                         if (englishDirectory != null && File.Exists(file1.FullName) && File.Exists(file2.FullName))
                         {
@@ -376,21 +398,54 @@ namespace SteamGamesInstaller
                         }
                     }
                 }
-
-                if (!installOptions.IsUseSteam && installOptions.IsUseInstallscript && this.installScript != null)
-                {
-                    ValveDataFile vdf = new ValveDataFile(this.installScript);
-
-                    vdf.BackgroundWorker = worker;
-                    vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOptions.InstallDirectory, @"common\Skyrim"));
-                    vdf.GameLanguage = installOptions.Language.EnglishName;
-
-                    vdf.ExecuteScript();
-                }
             }
         }
 
         #endregion Game install methods.
+
+        #region Fixes install methods.
+
+        private void FixesInstallDefaultMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker)
+        {
+            DirectoryInfo fixesDirectory = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "_Fixes"));
+
+            if (fixesDirectory.Exists)
+            {
+                DirectoryInfo[] fixDirectories = fixesDirectory.GetDirectories();
+
+                if (fixDirectories != null && fixDirectories.Length > 0)
+                {
+                    for (Int32 i = 0; i < game.ComponentsCount; i++)
+                    {
+                        GameComponent component = game.GetComponent(i);
+
+                        if (component.ComponentCulture == CultureInfo.InvariantCulture || CultureInfo.Equals(component.ComponentCulture, installOptions.Language))
+                        {
+                            DirectoryInfo componentDirectory = SgiUtils.GetDirectoryWithLatestVersion(component);
+
+                            if (componentDirectory != null)
+                            {
+                                DirectoryInfo fixDirectory = null;
+
+                                foreach (DirectoryInfo directory in fixDirectories)
+                                {
+                                    if (String.Compare(directory.Name, componentDirectory.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        fixDirectory = directory;
+                                        break;
+                                    }
+                                }
+
+                                if (fixDirectory != null)
+                                    SgiUtils.CopyDirectory(fixDirectory.FullName, installOptions.InstallDirectory, true, true, worker);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion Fixes install methods.
 
         private void FindGamesToInstall()
         {
@@ -447,7 +502,7 @@ namespace SteamGamesInstaller
                     {
                         if (game.GetComponent(j).CheckState == CheckState.Installable && CultureInfo.Equals(game.GetComponent(j).ComponentCulture, culture))
                         {
-                            DirectoryInfo directory = SgiUtils.GetLatestVersionDirectory(game.GetComponent(j));
+                            DirectoryInfo directory = SgiUtils.GetDirectoryWithLatestVersion(game.GetComponent(j));
 
                             if (directory != null)
                             {
@@ -533,10 +588,14 @@ namespace SteamGamesInstaller
         private ComponentsCheckMethod componentsCheckMethod;
         private CalculateSizeMethod calculateSizeMethod;
         private GameInstallMethod gameInstallMethod;
+        private FixesInstallMethod fixesInstallMethod;
         private CheckState checkState;
         private List<GameComponent> components;
+        private FileInfo installscript;
+        private Object customObject;
 
-        public SteamGame(Int32 id, String name, String directory, ComponentsCheckMethod checkMethod, CalculateSizeMethod calcSizeMethod, GameInstallMethod installMethod)
+        public SteamGame(Int32 id, String name, String directory, ComponentsCheckMethod checkMethod,
+            CalculateSizeMethod calcSizeMethod, GameInstallMethod installMethod, FixesInstallMethod fixesMethod)
         {
             appId = id;
             appName = name;
@@ -544,9 +603,11 @@ namespace SteamGamesInstaller
             componentsCheckMethod = checkMethod;
             calculateSizeMethod = calcSizeMethod;
             gameInstallMethod = installMethod;
+            fixesInstallMethod = fixesMethod;
             checkState = CheckState.NotChecked;
-
             components = new List<GameComponent>();
+            installscript = null;
+            customObject = null;
         }
 
         public Int32 AppId
@@ -585,10 +646,28 @@ namespace SteamGamesInstaller
             set { gameInstallMethod = value; }
         }
 
+        public FixesInstallMethod FixesInstallMethod
+        {
+            get { return fixesInstallMethod; }
+            set { fixesInstallMethod = value; }
+        }
+
         public CheckState CheckState
         {
             get { return checkState; }
             set { checkState = value; }
+        }
+
+        public FileInfo Installscript
+        {
+            get { return installscript; }
+            set { installscript = value; }
+        }
+
+        public Object CustomObject
+        {
+            get { return customObject; }
+            set { customObject = value; }
         }
 
         public void AddComponent(GameComponent component)
@@ -611,6 +690,17 @@ namespace SteamGamesInstaller
             foreach (GameComponent component in components)
             {
                 if (String.Compare(component.NcfFileName, SgiUtils.TrimDirectoryVersion(directoryName), StringComparison.OrdinalIgnoreCase) == 0)
+                    return component;
+            }
+
+            return null;
+        }
+
+        public GameComponent GetComponentByCulture(CultureInfo componentCulture)
+        {
+            foreach (GameComponent component in components)
+            {
+                if (CultureInfo.Equals(component.ComponentCulture, componentCulture))
                     return component;
             }
 
@@ -703,12 +793,12 @@ namespace SteamGamesInstaller
         String installDirectory;
         CultureInfo language;
 
-        public InstallOptions(String name, Boolean isSteam, Boolean isInstallscript, Boolean isFix, String directory, String lang)
+        public InstallOptions(String name, Boolean isSteam, Boolean isExecuteInstallscript, Boolean isInstallFixes, String directory, String lang)
         {
             gameName = name;
             isUseSteam = isSteam;
-            isUseInstallscript = isInstallscript;
-            isUseFix = isFix;
+            isUseInstallscript = isExecuteInstallscript;
+            isUseFix = isInstallFixes;
             installDirectory = directory;
             language = CultureInfo.InvariantCulture;
 
@@ -796,7 +886,7 @@ namespace SteamGamesInstaller
             return directoryName;
         }
 
-        public static DirectoryInfo GetLatestVersionDirectory(GameComponent gameComponent)
+        public static DirectoryInfo GetDirectoryWithLatestVersion(GameComponent gameComponent)
         {
             if (gameComponent == null)
                 throw new ArgumentNullException("gameComponent");
@@ -851,17 +941,11 @@ namespace SteamGamesInstaller
         public static String GetFolderPath(SgiSpecialFolder folder, SgiSpecialFolderOption option)
         {
             if (!Enum.IsDefined(typeof(SgiSpecialFolder), folder))
-            {
                 throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "Illegal enum value: {0}.", (Int32)folder));
-            }
             if (!Enum.IsDefined(typeof(SgiSpecialFolderOption), option))
-            {
                 throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "Illegal enum value: {0}.", (Int32)option));
-            }
             if (option == SgiSpecialFolderOption.Create)
-            {
                 new FileIOPermission(PermissionState.None) { AllFiles = FileIOPermissionAccess.Write }.Demand();
-            }
 
             StringBuilder lpszPath = new StringBuilder(260); // MAX_PATH (260)
             Int32 num = SafeNativeMethods.SHGetFolderPath(IntPtr.Zero, (Int32)(folder | ((SgiSpecialFolder)((Int32)option))), IntPtr.Zero, 0, lpszPath);
@@ -879,6 +963,62 @@ namespace SteamGamesInstaller
             new FileIOPermission(FileIOPermissionAccess.PathDiscovery, path).Demand();
 
             return path;
+        }
+
+        public static void CopyDirectory(String sourcePath, String destinationPath, Boolean isCopyDirectoryContentOnly, Boolean isBackup, BackgroundWorker worker)
+        {
+            if (String.IsNullOrEmpty(sourcePath))
+                throw new ArgumentNullException("sourcePath");
+            if (String.IsNullOrEmpty(destinationPath))
+                throw new ArgumentNullException("destinationPath");
+
+            DirectoryInfo sourceDirectory = new DirectoryInfo(sourcePath);
+            DirectoryInfo destDirectory = new DirectoryInfo(destinationPath);
+            Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
+
+            if (!isCopyDirectoryContentOnly)
+            {
+                destDirectory.Create();
+                destDirectory.Attributes = sourceDirectory.Attributes;
+            }
+
+            do
+            {
+                if (directoriesQueue.Count > 0)
+                {
+                    sourceDirectory = directoriesQueue.Dequeue();
+                    destDirectory = new DirectoryInfo(Path.Combine(destinationPath, sourceDirectory.FullName.Remove(0, sourcePath.Length + 1)));
+                    destDirectory.Create();
+                    destDirectory.Attributes = sourceDirectory.Attributes;
+                }
+
+                FileInfo[] files = sourceDirectory.GetFiles();
+
+                foreach (FileInfo file in files)
+                {
+                    if (worker != null && worker.CancellationPending)
+                        break;
+
+                    String destFileName = Path.Combine(destDirectory.FullName, file.Name);
+
+                    if (isBackup && File.Exists(destFileName))
+                    {
+                        String newDestFileName = destFileName + ".original";
+
+                        File.Delete(newDestFileName);
+                        File.Move(destFileName, newDestFileName);
+                    }
+
+                    file.CopyTo(destFileName, true);
+                }
+
+                DirectoryInfo[] subDirectories = sourceDirectory.GetDirectories();
+
+                foreach (DirectoryInfo subDirectory in subDirectories)
+                {
+                    directoriesQueue.Enqueue(subDirectory);
+                }
+            } while (directoriesQueue.Count > 0 && (worker == null || (worker != null && !worker.CancellationPending)));
         }
 
         #endregion Methods for working with directories.
@@ -1774,43 +1914,7 @@ namespace SteamGamesInstaller
                 }
 
                 if (!String.IsNullOrEmpty(sourcePath) && !String.IsNullOrEmpty(destinationPath))
-                {
-                    // Non-recursive algorithm
-                    DirectoryInfo sourceDirectory = new DirectoryInfo(sourcePath);
-                    DirectoryInfo destDirectory = new DirectoryInfo(destinationPath);
-                    Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
-
-                    destDirectory.Create();
-                    destDirectory.Attributes = sourceDirectory.Attributes;
-
-                    do
-                    {
-                        if (directoriesQueue.Count > 0)
-                        {
-                            sourceDirectory = directoriesQueue.Dequeue();
-                            destDirectory = new DirectoryInfo(Path.Combine(destinationPath, sourceDirectory.FullName.Remove(0, sourcePath.Length + 1)));
-                            destDirectory.Create();
-                            destDirectory.Attributes = sourceDirectory.Attributes;
-                        }
-
-                        FileInfo[] files = sourceDirectory.GetFiles();
-
-                        foreach (FileInfo file in files)
-                        {
-                            if (worker != null && worker.CancellationPending)
-                                break;
-
-                            file.CopyTo(Path.Combine(destDirectory.FullName, file.Name), true);
-                        }
-
-                        DirectoryInfo[] subDirectories = sourceDirectory.GetDirectories();
-
-                        foreach (DirectoryInfo subDirectory in subDirectories)
-                        {
-                            directoriesQueue.Enqueue(subDirectory);
-                        }
-                    } while (directoriesQueue.Count > 0 && (worker == null || (worker != null && !worker.CancellationPending)));
-                }
+                    SgiUtils.CopyDirectory(sourcePath, destinationPath, false, false, worker);
             }
         }
     }

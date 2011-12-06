@@ -258,20 +258,17 @@
   <data name="fixCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="fixCheckBox.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="fixCheckBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 88</value>
   </data>
   <data name="fixCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 17</value>
+    <value>77, 17</value>
   </data>
   <data name="fixCheckBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="fixCheckBox.Text" xml:space="preserve">
-    <value>Install fixes (not implemented yet)</value>
+    <value>Install fixes</value>
   </data>
   <data name="&gt;&gt;fixCheckBox.Name" xml:space="preserve">
     <value>fixCheckBox</value>

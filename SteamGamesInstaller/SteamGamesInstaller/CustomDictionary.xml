@@ -19,11 +19,11 @@
       (for example 'FileName' -> 'Filename').
     -->
     <Recognized>
-      <Word>sgi</Word>
       <Word>installscript</Word>
-      <Word>vdf</Word>
       <Word>ncf</Word>
+      <Word>sgi</Word>
       <Word>utils</Word>
+      <Word>vdf</Word>
     </Recognized>
     <!-- 
         This is a list of deprecated terms with their preferred alternates and is 
