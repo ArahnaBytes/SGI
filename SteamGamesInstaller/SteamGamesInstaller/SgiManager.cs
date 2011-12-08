@@ -20,7 +20,7 @@ namespace SteamGamesInstaller
 {
     public delegate void ComponentsCheckMethod(SteamGame game, DirectoryInfo[] directories);
     public delegate Int64 CalculateSizeMethod(SteamGame game, InstallOptions installOptions);
-    public delegate void GameInstallMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker);
+    public delegate Int64 GameInstallMethod(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker);
     public delegate void FixesInstallMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker);
 
     public class SgiManager
@@ -37,7 +37,7 @@ namespace SteamGamesInstaller
             games = new List<SteamGame>();
 
             PopulateGamesList();
-            FindGamesToInstall();
+            CheckGames();
         }
 
         /// <summary>
@@ -67,21 +67,31 @@ namespace SteamGamesInstaller
         /// <returns>Array of strings with languages for specified game which components are present in curent directory.</returns>
         public String[] GetInstallableLanguages(String gameName)
         {
-            List<String> strings = new List<String>();
+            Dictionary<String, String> languages;
             SteamGame game = GetGame(gameName);
+
+            languages = new Dictionary<String, String>();
 
             if (game != null)
             {
-                for (Int32 j = 0; j < game.ComponentsCount; j++)
+                for (Int32 i = 0; i < game.ComponentsCount; i++)
                 {
-                    GameComponent component = game.GetComponent(j);
+                    GameComponent component = game.GetComponent(i);
 
-                    if (component.CheckState == CheckState.Installable && !CultureInfo.Equals(component.ComponentCulture, CultureInfo.InvariantCulture))
-                        strings.Add(component.ComponentCulture.EnglishName + " (" + component.ComponentCulture.NativeName + ")");
+                    if (component.CheckState == CheckState.Installable)
+                    {
+                        for (Int32 j = 0; j < component.ComponentCulturesCount; j++)
+                        {
+                            CultureInfo componentCulture = component.GetCulture(j);
+
+                            if (!component.IsInvariant && !languages.ContainsKey(componentCulture.EnglishName))
+                                languages.Add(componentCulture.EnglishName, componentCulture.EnglishName + " (" + componentCulture.NativeName + ")");
+                        }
+                    }
                 }
 
-                if (strings.Count > 0)
-                    return strings.ToArray();
+                if (languages.Count > 0)
+                    return languages.Values.ToArray<String>();
             }
 
             return null;
@@ -119,7 +129,7 @@ namespace SteamGamesInstaller
 
             if (game != null)
             {
-                game.GameInstallMethod(game, installOptions, worker);
+                game.GameInstallMethod(game, installOptions, -1L, worker);
 
 
                 if (!installOptions.IsUseSteam && installOptions.IsUseInstallscript && game.Installscript != null)
@@ -128,7 +138,7 @@ namespace SteamGamesInstaller
 
                     vdf.BackgroundWorker = worker;
                     vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOptions.InstallDirectory, game.InstallDirectory));
-                    vdf.GameLanguage = installOptions.Language.EnglishName;
+                    vdf.GameLanguage = installOptions.Culture.EnglishName;
 
                     vdf.ExecuteScript();
                 }
@@ -150,17 +160,37 @@ namespace SteamGamesInstaller
             // The Elder Scrolls V: Skyrim
             games.Add(new SteamGame(72850, @"The Elder Scrolls V: Skyrim", @"common\Skyrim",
                 ComponentsCheckMethod72850, CalculateSizeMethod72850, GameInstallMethod72850, FixesInstallDefaultMethod));
+            games[games.Count - 1].AddComponent(new GameComponent(72851, true, @"Skyrim Content",
+                @"Skyrim Content", new CultureInfo[] { CultureInfo.InvariantCulture }));
+            games[games.Count - 1].AddComponent(new GameComponent(72852, true, @"Skyrim exe",
+                @"Skyrim exe", new CultureInfo[] { CultureInfo.InvariantCulture }));
+            games[games.Count - 1].AddComponent(new GameComponent(72853, false, @"The Elder Scrolls V: Skyrim english",
+                @"Skyrim english", new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72854, false, @"The Elder Scrolls V: Skyrim french",
+                @"Skyrim french", new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72855, false, @"The Elder Scrolls V: Skyrim italian",
+                @"Skyrim italian", new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72856, false, @"The Elder Scrolls V: Skyrim german",
+                @"Skyrim german", new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72857, false, @"The Elder Scrolls V: Skyrim spanish",
+                @"Skyrim spanish", new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72858, false, @"The Elder Scrolls V: Skyrim Polish",
+                @"Skyrim Polish", new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72859, false, @"The Elder Scrolls V: Skyrim Czech",
+                @"Skyrim Czech", new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72860, false, @"The Elder Scrolls V: Skyrim Russian",
+                @"Skyrim Russian", new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+            games[games.Count - 1].AddComponent(new GameComponent(72861, false, @"The Elder Scrolls V: Skyrim Japanese",
+                @"The Elder Scrolls V Skyrim Japanese", new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+            // "Skyrim Czech" and "Skyrim Polish" components use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
+            // files from "Skyrim english" component.
             games[games.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
-            games[games.Count - 1].AddComponent(new GameComponent(72851, @"Skyrim Content", @"Skyrim Content", CultureInfo.InvariantCulture));
-            games[games.Count - 1].AddComponent(new GameComponent(72852, @"Skyrim exe", @"Skyrim exe", CultureInfo.InvariantCulture));
-            games[games.Count - 1].AddComponent(new GameComponent(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", CultureInfo.GetCultureInfo("en")));
-            games[games.Count - 1].AddComponent(new GameComponent(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", CultureInfo.GetCultureInfo("fr")));
-            games[games.Count - 1].AddComponent(new GameComponent(72855, @"The Elder Scrolls V: Skyrim italian", @"Skyrim italian", CultureInfo.GetCultureInfo("it")));
-            games[games.Count - 1].AddComponent(new GameComponent(72856, @"The Elder Scrolls V: Skyrim german", @"Skyrim german", CultureInfo.GetCultureInfo("de")));
-            games[games.Count - 1].AddComponent(new GameComponent(72857, @"The Elder Scrolls V: Skyrim spanish", @"Skyrim spanish", CultureInfo.GetCultureInfo("es")));
-            games[games.Count - 1].AddComponent(new GameComponent(72858, @"The Elder Scrolls V: Skyrim Polish", @"Skyrim Polish", CultureInfo.GetCultureInfo("pl")));
-            games[games.Count - 1].AddComponent(new GameComponent(72859, @"The Elder Scrolls V: Skyrim Czech", @"Skyrim Czech", CultureInfo.GetCultureInfo("cs")));
-            games[games.Count - 1].AddComponent(new GameComponent(72860, @"The Elder Scrolls V: Skyrim Russian", @"Skyrim Russian", CultureInfo.GetCultureInfo("ru")));
+
+            // Terraria
+            games.Add(new SteamGame(105600, @"Terraria", @"common\Terraria",
+                ComponentsCheckDefaultMethod, CalculateSizeDefaultMethod, GameInstallDefaultMethod, FixesInstallDefaultMethod));
+            games[games.Count - 1].AddComponent(new GameComponent(105601, true, @"TerrariaRelease",
+                @"TerrariaRelease", new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
         }
 
         # endregion Games list.
@@ -170,65 +200,64 @@ namespace SteamGamesInstaller
         /// <summary>
         /// Default method for checking game components.
         /// </summary>
-        /// <param name="game">Steam game object.</param>
+        /// <param name="game">SteamGame object.</param>
         /// <param name="directories">Directories in curent directory.</param>
         private static void ComponentsCheckDefaultMethod(SteamGame game, DirectoryInfo[] directories)
         {
-            Boolean isCultureComponentPresent = false;
-
-            game.CheckState = CheckState.Installable;
+            Boolean isNonInvariantComponentExists = false;
+            Boolean isNotInstallableRequiredComponentExists = false;
 
             for (Int32 i = 0; i < game.ComponentsCount; i++)
             {
-                game.GetComponent(i).CheckState = CheckState.NotInstallable;
+                GameComponent component = game.GetComponent(i);
 
                 foreach (DirectoryInfo directory in directories)
                 {
-                    if (String.Compare(game.GetComponent(i).NcfFileName, SgiUtils.TrimDirectoryVersion(directory.Name), StringComparison.OrdinalIgnoreCase) == 0)
+                    if (String.Compare(component.NcfFileName, SgiUtils.TrimDirectoryVersion(directory.Name), StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        game.GetComponent(i).CheckState = CheckState.Installable;
-                        game.GetComponent(i).AddDirectory(directory);
+                        component.CheckState = CheckState.Installable;
+                        component.AddDirectory(directory);
 
-                        if (!CultureInfo.Equals(game.GetComponent(i).ComponentCulture, CultureInfo.InvariantCulture))
-                            isCultureComponentPresent = true;
-
-                        break;
+                        if (!component.IsInvariant)
+                            isNonInvariantComponentExists = true;
                     }
                 }
 
-                if (game.GetComponent(i).CheckState == CheckState.NotInstallable && CultureInfo.Equals(game.GetComponent(i).ComponentCulture, CultureInfo.InvariantCulture))
+                if (component.CheckState != CheckState.Installable)
                 {
                     game.CheckState = CheckState.NotInstallable;
+                    if (component.IsRequired)
+                        isNotInstallableRequiredComponentExists = true;
                 }
             }
 
-            if (!isCultureComponentPresent)
+            if (isNotInstallableRequiredComponentExists || !isNonInvariantComponentExists)
                 game.CheckState = CheckState.NotInstallable;
+            else
+                game.CheckState = CheckState.Installable;
         }
 
         /// <summary>
         /// Checks components for "The Elder Scrolls V: Skyrim".
         /// </summary>
-        /// <param name="game">Steam game object.</param>
+        /// <param name="game">SteamGame object.</param>
         /// <param name="directories">Directories in curent directory.</param>
         private void ComponentsCheckMethod72850(SteamGame game, DirectoryInfo[] directories)
         {
             ComponentsCheckDefaultMethod(game, directories);
 
             // Game specific checks
-            // If you use CZECH or POLISH version also copy Skyrim - Voices.bsa and Skyrim - VoicesExtra.bsa files from skyrim english.v3\common\Skyrim\Data
-            // folder to your SteamApps\common\Skyrim\Data folder.
-            GameComponent polish = game.GetComponentByCulture(CultureInfo.GetCultureInfo("pl"));
-            GameComponent czech = game.GetComponentByCulture(CultureInfo.GetCultureInfo("cs"));
+            GameComponent polish = game.GetComponentByAppId(72858);
+            GameComponent czech = game.GetComponentByAppId(72859);
 
             if (polish != null || czech != null)
             {
                 Boolean isSharedFilesExists = false;
-                GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
+                GameComponent english = game.GetComponentByAppId(72853);
 
                 if (english != null)
                 {
-                    DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                    DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
                     String file1 = ((String[])game.CustomObject)[0];
                     String file2 = ((String[])game.CustomObject)[1];
 
@@ -277,22 +306,22 @@ namespace SteamGamesInstaller
 
             if (size != -1)
             {
-                if (CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("pl")) ||
-                    CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("cs")))
+                if (CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("pl")) ||
+                    CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("cs")))
                 {
-                    GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
+                    GameComponent english = game.GetComponentByAppId(72853);
 
                     if (english != null)
                     {
-                        DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                        DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
                         String file1 = ((String[])game.CustomObject)[0];
                         String file2 = ((String[])game.CustomObject)[1];
 
                         if (englishDirectory != null &&
                             File.Exists(Path.Combine(englishDirectory.FullName, file1)) && File.Exists(Path.Combine(englishDirectory.FullName, file2)))
                         {
-                            size += new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, file1)).Length;
-                            size += new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, file2)).Length;
+                            size += new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, file1)).Length;
+                            size += new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, file2)).Length;
                         }
                     }
 
@@ -309,10 +338,12 @@ namespace SteamGamesInstaller
         /// <summary>
         /// Default installation method.
         /// </summary>
-        /// <param name="game">Steam game object.</param>
-        /// <param name="installOptions">Install options object.</param>
-        /// <returns>Size of copied files.</returns>
-        private static Int64 GameInstallDefaultMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker, Int64 gameSize)
+        /// <param name="game">SteamGame object.</param>
+        /// <param name="installOptions">InstallOptions object.</param>
+        /// <param name="gameSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
+        /// <param name="worker">BackgroundWorker object.</param>
+        /// <returns>Size of installed files.</returns>
+        private static Int64 GameInstallDefaultMethod(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker)
         {
             DirectoryInfo[] directories = GetDirectoriesToInstall(game, installOptions);
             Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
@@ -320,6 +351,8 @@ namespace SteamGamesInstaller
             DirectoryInfo sourceDirectory;
             DirectoryInfo destDirectory;
 
+            if (gameSize == -1)
+                gameSize = game.CalculateSizeMethod(game, installOptions);
             game.Installscript = null;
 
             // Non-recursive algorithm
@@ -369,36 +402,43 @@ namespace SteamGamesInstaller
         /// <summary>
         /// Installation method for "The Elder Scrolls V: Skyrim".
         /// </summary>
-        /// <param name="game">Steam game object.</param>
-        /// <param name="installOptions">Install options object.</param>
-        private void GameInstallMethod72850(SteamGame game, InstallOptions installOptions, BackgroundWorker worker)
+        /// <param name="game">SteamGame object.</param>
+        /// <param name="installOptions">InstallOptions object.</param>
+        /// <param name="gameSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
+        /// <param name="worker">BackgroundWorker object.</param>
+        /// <returns>Size of installed files.</returns>
+        private Int64 GameInstallMethod72850(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker)
         {
-            Int64 gameSize = game.CalculateSizeMethod(game, installOptions);
-            Int64 copiedFilesSize = GameInstallDefaultMethod(game, installOptions, worker, gameSize);
+            if (gameSize == -1)
+                gameSize = game.CalculateSizeMethod(game, installOptions);
+
+            Int64 installedFilesSize = GameInstallDefaultMethod(game, installOptions, gameSize, worker);
 
             if (!worker.CancellationPending)
             {
-                if (CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("pl")) ||
-                    CultureInfo.Equals(installOptions.Language, CultureInfo.GetCultureInfo("cs")))
+                if (CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("pl")) ||
+                    CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("cs")))
                 {
-                    GameComponent english = game.GetComponentByCulture(CultureInfo.GetCultureInfo("en"));
+                    GameComponent english = game.GetComponentByAppId(72853);
 
                     if (english != null)
                     {
-                        DirectoryInfo englishDirectory = SgiUtils.GetDirectoryWithLatestVersion(english);
+                        DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
                         String fileName1 = ((String[])game.CustomObject)[0];
                         String fileName2 = ((String[])game.CustomObject)[1];
-                        FileInfo file1 = new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, fileName1));
-                        FileInfo file2 = new FileInfo(Path.Combine(SgiUtils.GetDirectoryWithLatestVersion(english).FullName, fileName2));
+                        FileInfo file1 = new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, fileName1));
+                        FileInfo file2 = new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, fileName2));
 
                         if (englishDirectory != null && File.Exists(file1.FullName) && File.Exists(file2.FullName))
                         {
-                            copiedFilesSize += CopyFile(file1, Path.Combine(installOptions.InstallDirectory, fileName1), worker, gameSize, copiedFilesSize);
-                            copiedFilesSize += CopyFile(file2, Path.Combine(installOptions.InstallDirectory, fileName2), worker, gameSize, copiedFilesSize);
+                            installedFilesSize += CopyFile(file1, Path.Combine(installOptions.InstallDirectory, fileName1), worker, gameSize, installedFilesSize);
+                            installedFilesSize += CopyFile(file2, Path.Combine(installOptions.InstallDirectory, fileName2), worker, gameSize, installedFilesSize);
                         }
                     }
                 }
             }
+
+            return installedFilesSize;
         }
 
         #endregion Game install methods.
@@ -419,9 +459,9 @@ namespace SteamGamesInstaller
                     {
                         GameComponent component = game.GetComponent(i);
 
-                        if (component.ComponentCulture == CultureInfo.InvariantCulture || CultureInfo.Equals(component.ComponentCulture, installOptions.Language))
+                        if (component.IsInvariant || component.IsHaveCulture(installOptions.Culture))
                         {
-                            DirectoryInfo componentDirectory = SgiUtils.GetDirectoryWithLatestVersion(component);
+                            DirectoryInfo componentDirectory = component.DirectoryWithLatestVersion;
 
                             if (componentDirectory != null)
                             {
@@ -447,19 +487,12 @@ namespace SteamGamesInstaller
 
         #endregion Fixes install methods.
 
-        private void FindGamesToInstall()
+        private void CheckGames()
         {
             DirectoryInfo[] directories = new DirectoryInfo(Environment.CurrentDirectory).GetDirectories("*", SearchOption.TopDirectoryOnly);
 
-            foreach (DirectoryInfo directory in directories)
-            {
-                SteamGame game = GetGameByComponentDirectoryName(directory.Name);
-
-                if (game != null && game.CheckState == CheckState.NotChecked)
-                {
-                    game.ComponentsCheckMethod(game, directories);
-                }
-            }
+            foreach (SteamGame game in this.games)
+                game.ComponentsCheckMethod(game, directories);
         }
 
         private SteamGame GetGame(String gameName)
@@ -475,43 +508,25 @@ namespace SteamGamesInstaller
             return null;
         }
 
-        private SteamGame GetGameByComponentDirectoryName(String directoryName)
-        {
-            foreach (SteamGame game in this.games)
-            {
-                GameComponent component = game.GetComponentByDirectoryName(directoryName);
-
-                if (component != null)
-                    return game;
-            }
-
-            return null;
-        }
-
         private static DirectoryInfo[] GetDirectoriesToInstall(SteamGame game, InstallOptions installOptions)
         {
             List<DirectoryInfo> directories = new List<DirectoryInfo>();
 
             if (game.CheckState == CheckState.Installable)
             {
-                CultureInfo culture = CultureInfo.InvariantCulture;
-
-                for (Int32 i = 0; i < 2; i++) // at first iteration we add directories of invariant components, at second - specified in installOptions directory of language component 
+                // Add directories of required components and directories of components with culture specified in installOptions
+                // and directories of invariant components
+                for (Int32 i = 0; i < game.ComponentsCount; i++)
                 {
-                    for (Int32 j = 0; j < game.ComponentsCount; j++)
+                    GameComponent component = game.GetComponent(i);
+
+                    if (component.CheckState == CheckState.Installable && (component.IsRequired || component.IsHaveCulture(installOptions.Culture)) || component.IsInvariant)
                     {
-                        if (game.GetComponent(j).CheckState == CheckState.Installable && CultureInfo.Equals(game.GetComponent(j).ComponentCulture, culture))
-                        {
-                            DirectoryInfo directory = SgiUtils.GetDirectoryWithLatestVersion(game.GetComponent(j));
+                        DirectoryInfo directory = component.DirectoryWithLatestVersion;
 
-                            if (directory != null)
-                            {
-                                directories.Add(directory);
-                            }
-                        }
+                        if (directory != null)
+                            directories.Add(directory);
                     }
-
-                    culture = installOptions.Language;
                 }
             }
 
@@ -685,22 +700,13 @@ namespace SteamGamesInstaller
             get { return components.Count; }
         }
 
-        public GameComponent GetComponentByDirectoryName(String directoryName)
+        public GameComponent GetComponentByNcfFileName(String directoryName)
         {
+            directoryName = SgiUtils.TrimDirectoryVersion(directoryName);
+
             foreach (GameComponent component in components)
             {
-                if (String.Compare(component.NcfFileName, SgiUtils.TrimDirectoryVersion(directoryName), StringComparison.OrdinalIgnoreCase) == 0)
-                    return component;
-            }
-
-            return null;
-        }
-
-        public GameComponent GetComponentByCulture(CultureInfo componentCulture)
-        {
-            foreach (GameComponent component in components)
-            {
-                if (CultureInfo.Equals(component.ComponentCulture, componentCulture))
+                if (String.Compare(component.NcfFileName, directoryName, StringComparison.OrdinalIgnoreCase) == 0)
                     return component;
             }
 
@@ -722,18 +728,31 @@ namespace SteamGamesInstaller
     public class GameComponent
     {
         private Int32 appId;
+        private Boolean isComponentRequired;
         private String appName;
         private String ncfFileName;
-        private CultureInfo componentCulture;
+        private List<CultureInfo> componentCultures;
         private CheckState checkState;
         private List<DirectoryInfo> directories;
 
-        public GameComponent(Int32 id, String name, String fileName, CultureInfo culture)
+        public GameComponent(Int32 id, Boolean isRequired, String name, String fileName, CultureInfo[] cultures)
         {
+            if (String.IsNullOrEmpty(fileName))
+                throw new ArgumentNullException("fileName");
+            if (cultures == null)
+                throw new ArgumentNullException("cultures");
+            if (cultures.Length < 1)
+                throw new ArgumentException("Component should have at least one culture.", "cultures");
+
             appId = id;
+            isComponentRequired = isRequired;
             appName = name;
             ncfFileName = fileName;
-            componentCulture = culture;
+            componentCultures = new List<CultureInfo>(1);
+
+            foreach (CultureInfo culture in cultures)
+                componentCultures.Add(culture);
+
             checkState = CheckState.NotChecked;
             directories = new List<DirectoryInfo>();
         }
@@ -742,6 +761,12 @@ namespace SteamGamesInstaller
         {
             get { return appId; }
             set { appId = value; }
+        }
+
+        public Boolean IsRequired
+        {
+            get { return isComponentRequired; }
+            set { isComponentRequired = value; }
         }
 
         public String AppName
@@ -756,10 +781,14 @@ namespace SteamGamesInstaller
             set { ncfFileName = value; }
         }
 
-        public CultureInfo ComponentCulture
+        public CultureInfo GetCulture(Int32 index)
         {
-            get { return componentCulture; }
-            set { componentCulture = value; }
+            return componentCultures[index];
+        }
+
+        public Int32 ComponentCulturesCount
+        {
+            get { return componentCultures.Count; }
         }
 
         public CheckState CheckState
@@ -782,6 +811,53 @@ namespace SteamGamesInstaller
         {
             get { return directories.Count; }
         }
+
+        public Boolean IsInvariant
+        {
+            get
+            {
+                foreach (CultureInfo componentCulture in this.componentCultures)
+                {
+                    if (CultureInfo.Equals(componentCulture, CultureInfo.InvariantCulture))
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        public Boolean IsHaveCulture(CultureInfo culture)
+        {
+            foreach (CultureInfo componentCulture in this.componentCultures)
+            {
+                if (CultureInfo.Equals(componentCulture, culture))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public DirectoryInfo DirectoryWithLatestVersion
+        {
+            get
+            {
+                Int32 latestVersion = -1;
+                DirectoryInfo latestVersionDirectory = null;
+
+                foreach (DirectoryInfo directory in this.directories)
+                {
+                    Int32 directoryVersion = SgiUtils.GetDirectoryVersion(directory.Name);
+
+                    if (directoryVersion >= latestVersion)
+                    {
+                        latestVersion = directoryVersion;
+                        latestVersionDirectory = directory;
+                    }
+                }
+
+                return latestVersionDirectory;
+            }
+        }
     }
 
     public class InstallOptions
@@ -791,21 +867,21 @@ namespace SteamGamesInstaller
         Boolean isUseInstallscript;
         Boolean isUseFix;
         String installDirectory;
-        CultureInfo language;
+        CultureInfo culture;
 
-        public InstallOptions(String name, Boolean isSteam, Boolean isExecuteInstallscript, Boolean isInstallFixes, String directory, String lang)
+        public InstallOptions(String name, Boolean isSteam, Boolean isExecuteInstallscript, Boolean isInstallFixes, String directory, String language)
         {
             gameName = name;
             isUseSteam = isSteam;
             isUseInstallscript = isExecuteInstallscript;
             isUseFix = isInstallFixes;
             installDirectory = directory;
-            language = CultureInfo.InvariantCulture;
+            culture = CultureInfo.InvariantCulture;
 
-            foreach (CultureInfo culture in CultureInfo.GetCultures(CultureTypes.AllCultures))
+            foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.AllCultures))
             {
-                if (String.Compare(culture.EnglishName + " (" + culture.NativeName + ")", lang, StringComparison.OrdinalIgnoreCase) == 0)
-                    language = culture;
+                if (String.Compare(ci.EnglishName + " (" + ci.NativeName + ")", language, StringComparison.OrdinalIgnoreCase) == 0)
+                    culture = ci;
             }
         }
 
@@ -839,10 +915,10 @@ namespace SteamGamesInstaller
             set { installDirectory = value; }
         }
 
-        public CultureInfo Language
+        public CultureInfo Culture
         {
-            get { return language; }
-            set { language = value; }
+            get { return culture; }
+            set { culture = value; }
         }
     }
 
@@ -884,28 +960,6 @@ namespace SteamGamesInstaller
                 return directoryName.Substring(0, trimIndex);
 
             return directoryName;
-        }
-
-        public static DirectoryInfo GetDirectoryWithLatestVersion(GameComponent gameComponent)
-        {
-            if (gameComponent == null)
-                throw new ArgumentNullException("gameComponent");
-
-            Int32 latestVersion = -1;
-            DirectoryInfo latestVersionDirectory = null;
-
-            for (Int32 i = 0; i < gameComponent.DirectoriesCount; i++)
-            {
-                Int32 directoryVersion = SgiUtils.GetDirectoryVersion(gameComponent.GetDirectory(i).Name);
-
-                if (directoryVersion >= latestVersion)
-                {
-                    latestVersion = directoryVersion;
-                    latestVersionDirectory = gameComponent.GetDirectory(i);
-                }
-            }
-
-            return latestVersionDirectory;
         }
 
         public static Int32 GetDirectoryVersion(String directoryName)
@@ -1569,9 +1623,30 @@ namespace SteamGamesInstaller
                         {
                             if (j + 1 == script[i].Length)
                                 throw new VdfSyntaxException(String.Format(CultureInfo.InvariantCulture, "Syntax error! Unexpected end of token in {0} at {1},{2}", valveDataFile.Name, i + 1, j + 1));
-                            length = script[i].IndexOf('"', j + 1) - j + 1;
-                            if (length < 2)
+                            if (script[i].IndexOf('"', j + 1) < 0)
                                 throw new VdfSyntaxException(String.Format(CultureInfo.InvariantCulture, "Syntax error! Unexpected end of token in {0} at {1},{2}", valveDataFile.Name, i + 1, j + 1));
+
+                            // Process possible @"\""" strings
+                            Int32 tokenInd = j + 1;
+
+                            while (tokenInd < script[i].Length)
+                            {
+                                if (script[i][tokenInd] == '\\')
+                                {
+                                    tokenInd += 2;
+                                }
+                                else
+                                {
+                                    if (script[i][tokenInd] == '\"')
+                                        break;
+                                    tokenInd++;
+                                }
+                            }
+
+                            if (tokenInd >= script[i].Length)
+                                throw new VdfSyntaxException(String.Format(CultureInfo.InvariantCulture, "Syntax error! Unexpected end of token in {0} at {1},{2}", valveDataFile.Name, i + 1, j + 1));
+
+                            length = tokenInd - j + 1;
                             cst.Add(new VdfCstNode(VdfSTNodeType.Value, i, j, length));
                             j += length;
                         }
@@ -1649,6 +1724,9 @@ namespace SteamGamesInstaller
             {
                 String nodeValue = script[node.Line].Substring(node.Column, node.Length);
 
+                if (nodeValue[0] == '\"' && nodeValue[nodeValue.Length - 1] == '\"')
+                    nodeValue = nodeValue.Substring(1, nodeValue.Length - 2); // removes \" at start and end of string
+
                 // Replace variables
                 Int32 index = -1;
                 String[] variables = new String[] { "%ALLUSERSPROFILE%", "%CDKEY%", "%INSTALLDIR%", "%SYSTEMROOT%", "%TEMP%", "%USERPROFILE%", "%USER_MYDOCS%", "%WINDIR%" };
@@ -1701,7 +1779,7 @@ namespace SteamGamesInstaller
                     }
                 } while (index != -1);
 
-                return nodeValue;
+                return SgiUtils.Unescape(nodeValue);
             }
             else
                 return null;
@@ -2006,11 +2084,7 @@ namespace SteamGamesInstaller
                 throw new ArgumentNullException("value");
 
             type = nodeType;
-            if (value[0] == '\"' && value[value.Length - 1] == '\"')
-                nodeValue = value.Substring(1, value.Length - 2); // removes \" at start and end of string
-            else
-                nodeValue = value;
-            nodeValue = SgiUtils.Unescape(nodeValue);
+            nodeValue = value;
             nodes = new List<VdfAstNode>(1);
         }
 

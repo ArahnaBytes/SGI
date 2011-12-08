@@ -39,6 +39,10 @@ using System.Runtime.InteropServices;
 
 //[assembly: AssemblyVersion("1.0.0.0")]
 //[assembly: AssemblyFileVersion("1.0.0.0")]
+
+// As mentioned in Assembly Linker (Al.exe) article (http://msdn.microsoft.com/en-us/library/c405shex(VS.90).aspx)
+// asterisk ('*') for build causes build to be equal to the number of days since January 1, 2000, local time,
+// and revision to be equal to the number of seconds since midnight, January 1, 2000, local time, divided by 2.
 [assembly: AssemblyVersion("1.0.*")]
 
 [assembly: CLSCompliant(true)]

@@ -2,11 +2,11 @@
 // Authors of this source code (Program.cs): Mesenion (ArahnaBytes). Other contributors should be mentioned in comments.
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Text;
-using System.Globalization;
+using System.Windows.Forms;
 using SteamGamesInstaller.Properties;
 
 namespace SteamGamesInstaller
@@ -34,7 +34,7 @@ namespace SteamGamesInstaller
 
         /// <summary>
         /// If command line have /fixchangelogversion argument, then in SgiReadme.txt file in current directory
-        /// replaces first version stump after "CHANGELOG" word.
+        /// replaces first version stump after "CHANGELOG:" phrase with assembly version, version name and current date.
         /// </summary>
         /// <param name="args">Arguments in command line.</param>
         /// <returns>Returns true if if command line have /fixchangelogversion argument.</returns>
@@ -54,10 +54,15 @@ namespace SteamGamesInstaller
 
                         if (!String.IsNullOrEmpty(text))
                         {
-                            Int32 index = text.IndexOf(searchVersion, text.LastIndexOf("CHANGELOG", StringComparison.Ordinal), StringComparison.Ordinal);
+                            Int32 index = text.IndexOf(searchVersion, text.LastIndexOf("CHANGELOG:", StringComparison.Ordinal), StringComparison.Ordinal);
+                            String changeLogVersionString = String.Format(CultureInfo.InvariantCulture, Resources.SgiVersionMessage, version.ToString()).Trim();
+
+                            changeLogVersionString = String.Format(CultureInfo.InvariantCulture, Resources.SgiVersionMessage, version.ToString());
+                            changeLogVersionString += " " + DateTime.Now.ToString(CultureInfo.InvariantCulture.DateTimeFormat.LongDatePattern,
+                                CultureInfo.InvariantCulture.DateTimeFormat) + ":";
 
                             text = text.Remove(index, searchVersion.Length);
-                            text = text.Insert(index, String.Format(CultureInfo.InvariantCulture, Resources.SgiVersionMessage, version.ToString()).Trim());
+                            text = text.Insert(index, changeLogVersionString.Trim());
                             File.WriteAllText(readmeFileName, text, Encoding.Default);
                         }
                     }

@@ -51,9 +51,23 @@ to divide files on localizable part which contains files translated to one of la
 files independent from language. In some cases localizable files for diffrent languages have same names, so it is impossible
 to save such files in the same directory.
 
+KNOWN BUGS:
+- bug since v1.0.4358.1416: if install two or more fix directories and some files in such directories have same names then
+renamed original file in installation directory will be replaced with file from penultimate fix directory. Will be fixed when
+SGI will support files maps (lists of key-values where key is file name in installation firectory and value is file name in
+source directory).
+
 CHANGELOG:
 
-1.0.* December 7, 2011:
+1.0.*
+- Fixed possible bug if in valve data file token have value with \" string.
+- Added support of multicultural components.
+- You can assign to GameInstallMethod delegates all game install methods which now have matching signature.
+- Terraria added to games list.
+- Program.FixChangeLogVersion method improvement.
+- SgiManager.ComponentsCheckDefaultMethod method code cleaning.
+
+v1.0.4358.1416 "White Stone" December 7, 2011:
 - Implemented installation of fixes.
 - Replacing version stump in SgiReadme.txt if command line have /fixchangelogversion argument.
 - Removed some duplicate code.
