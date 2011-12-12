@@ -54,6 +54,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed crash if not exists HKEY_CURRENT_USER\Software\Valve\Steam\SteamPath registry key.
+
+v1.0.4363.13647 "White Stone" Monday, 12 December 2011:
 - Fixed bug since v1.0.4358.1416: if install two or more fix directories and some files in such directories have same names then
 renamed original file in installation directory will be replaced with file from penultimate fix directory.
 - User now have option to do these actions in any combinations: install application, install fixes, execute installation script.

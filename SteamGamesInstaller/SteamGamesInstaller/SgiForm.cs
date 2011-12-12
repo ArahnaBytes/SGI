@@ -32,6 +32,7 @@ namespace SteamGamesInstaller
 #if JIT
         private Assembly managerAssembly;
 #endif
+        DirectoryInfo currentProcessDirectory;
         private ISgiManager manager;
         private Int64 appSize;
         private Int64 freeSpace;
@@ -41,12 +42,19 @@ namespace SteamGamesInstaller
         [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
         public SgiForm()
         {
+            currentProcessDirectory = new DirectoryInfo(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
             isInstalling = false;
 
             InitializeComponent();
 
             this.Text += String.Format(CultureInfo.CurrentUICulture, Resources.SgiVersionMessage, Application.ProductVersion);
 
+#if JIT
+            managerAssembly = CompileManagerAssembly();
+
+            if (managerAssembly == null)
+                this.Close();
+#endif
             installDirectoryTextBox.Text = GetSteamAppsDirectory();
             CreateManager();
         }
@@ -62,6 +70,9 @@ namespace SteamGamesInstaller
 
         private void refreshButton_Click(object sender, EventArgs e)
         {
+#if JIT
+            managerAssembly = CompileManagerAssembly();
+#endif
             CreateManager();
         }
 
@@ -187,31 +198,18 @@ namespace SteamGamesInstaller
             worker.Dispose();
         }
 
-        private static String GetSteamAppsDirectory()
-        {
-            String steamPath = (String)Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam").GetValue("SteamPath");
-
-            if (!String.IsNullOrEmpty(steamPath))
-                return Path.Combine(Path.GetFullPath((String)steamPath), "SteamApps");
-
-            return String.Empty;
-        }
-
-        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
-        private void CreateManager()
-        {
-            SetControlsState(false);
 #if JIT
+        private Assembly CompileManagerAssembly()
+        {
             CompilerResults results = null;
             CompilerParameters parameters = new CompilerParameters(new String[] { "System.dll", "System.Core.dll" });
-            String assemblyDirectoryName = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
             parameters.GenerateInMemory = true;
-            parameters.TempFiles = new TempFileCollection(assemblyDirectoryName, false);
+            parameters.TempFiles = new TempFileCollection(currentProcessDirectory.FullName, false);
 
             using (CodeDomProvider provider = CodeDomProvider.CreateProvider("CSharp"))
             {
-                results = provider.CompileAssemblyFromSource(parameters, File.ReadAllText(Path.Combine(assemblyDirectoryName, "SgiManager.cs")));
+                results = provider.CompileAssemblyFromSource(parameters, File.ReadAllText(Path.Combine(currentProcessDirectory.FullName, "SgiManager.cs")));
             }
 
             if (results != null && results.Errors.Count > 0)
@@ -227,10 +225,45 @@ namespace SteamGamesInstaller
                     errorForm.ShowDialog();
                 }
 
-                return;
+                return null;
             }
 
-            managerAssembly = results.CompiledAssembly;
+            return results.CompiledAssembly;
+        }
+#endif
+
+        private String GetSteamAppsDirectory()
+        {
+            String steamPath = (String)Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam").GetValue("SteamPath");
+
+            if (!String.IsNullOrEmpty(steamPath))
+                return Path.Combine(Path.GetFullPath((String)steamPath), "SteamApps");
+            else
+            {
+#if JIT
+                steamPath = (String)managerAssembly.GetType("SteamGamesInstaller.SgiUtils").
+                    GetMethod("GetFolderPath", new Type[] { managerAssembly.GetType("SteamGamesInstaller.SgiSpecialFolder") }).
+                    Invoke(null, new Object[] { 0x2a }); // SgiSpecialFolder.ProgramFilesX86 = 0x2a
+#else
+                steamPath = SgiUtils.GetFolderPath(SgiSpecialFolder.ProgramFilesX86);
+#endif
+
+                if (String.IsNullOrEmpty(steamPath)) // Dunno what returns with SgiSpecialFolder.ProgramFilesX86 on x86 OS, so check here
+                    steamPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                if (String.IsNullOrEmpty(steamPath)) // Oh, nothing work :(
+                    steamPath = currentProcessDirectory.Root.FullName;
+
+                steamPath = Path.Combine(steamPath, @"Steam\SteamApps");
+
+                return steamPath;
+            }
+        }
+
+        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
+        private void CreateManager()
+        {
+            SetControlsState(false);
+#if JIT
             manager = new SgiManagerWrapper(managerAssembly.CreateInstance("SteamGamesInstaller.SgiManager"));
 #else
             manager = new SgiManager();
