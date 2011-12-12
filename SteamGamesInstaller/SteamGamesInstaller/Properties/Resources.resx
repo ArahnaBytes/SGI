@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AppSizeInMbMessage" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
   <data name="BackgroundThreadStackTraceMessage" xml:space="preserve">
     <value>Background thread stack trace:</value>
   </data>
@@ -131,9 +134,6 @@
   </data>
   <data name="FreeSpaceMessage" xml:space="preserve">
     <value> (your {0} drive has only {1} MB of free disk space available)</value>
-  </data>
-  <data name="GameSizeInMbMessage" xml:space="preserve">
-    <value>{0} MB</value>
   </data>
   <data name="InstallProgressMessage" xml:space="preserve">
     <value>{0} %</value>

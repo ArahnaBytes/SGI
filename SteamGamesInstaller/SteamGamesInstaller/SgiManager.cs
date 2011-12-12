@@ -18,74 +18,83 @@ using Microsoft.Win32;
 
 namespace SteamGamesInstaller
 {
-    public delegate void ComponentsCheckMethod(SteamGame game, DirectoryInfo[] directories);
-    public delegate Int64 CalculateSizeMethod(SteamGame game, InstallOptions installOptions);
-    public delegate Int64 GameInstallMethod(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker);
-    public delegate void FixesInstallMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker);
+    public delegate void CheckDepotsMethod(SteamApplication app, DirectoryInfo[] directories);
+    public delegate Int64 GetFilesSizeMethod(SteamApplication app, InstallOptions installOptions);
+    public delegate Int64 InstallApplicationMethod(SteamApplication app, InstallOptions installOptions, Int64 appSize, BackgroundWorker worker);
 
-    public class SgiManager
+    public interface ISgiManager
     {
-        private List<SteamGame> games;
+        String[] GetInstallableApplications();
+        String[] GetInstallableLanguages(String appName);
+        Int64 GetFilesSize(Object installOptions);
+        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
+        void InstallApplication(Object installOptions, BackgroundWorker worker);
+    }
 
-        # region Front end.
+    public class SgiManager : ISgiManager
+    {
+        private List<SteamApplication> apps;
+        private DirectoryInfo depotsDirectory;
+
+        # region Code for front end.
 
         /// <summary>
-        /// Creates instance of manager and search installable components (components are directories with files, for example: "skyrim exe.v2" or "skyrim content.3" or "skyrim english") of games in curent directory.
+        /// Creates instance of manager, create applications list and check installable applications in current directory.
         /// </summary>
         public SgiManager()
         {
-            games = new List<SteamGame>();
+            apps = new List<SteamApplication>();
+            depotsDirectory = new DirectoryInfo(Environment.CurrentDirectory);
 
-            PopulateGamesList();
-            CheckGames();
+            PopulateApplicationsList();
         }
 
         /// <summary>
-        /// Returns array of strings with names of installable games which components are present in curent directory.
+        /// Returns array of strings with names of installable applications which depots are present in current directory.
         /// </summary>
-        /// <returns>Array of strings with names of installable games which components are present in curent directory.</returns>
-        public String[] GetInstallableGames()
+        /// <returns>Array of strings with names of installable applications which depots are present in current directory.</returns>
+        public String[] GetInstallableApplications()
         {
-            List<String> gameNames = new List<String>();
+            List<String> appNames = new List<String>();
 
-            foreach (SteamGame game in this.games)
+            foreach (SteamApplication app in this.apps)
             {
-                if (game.CheckState == CheckState.Installable)
-                    gameNames.Add(game.AppName);
+                if (app.CheckState == CheckState.Installable)
+                    appNames.Add(app.Name);
             }
 
-            if (gameNames.Count > 0)
-                return gameNames.ToArray();
+            if (appNames.Count > 0)
+                return appNames.ToArray();
             else
                 return null;
         }
 
         /// <summary>
-        /// Returns array of strings with installable languages for specified game which components are present in curent directory.
+        /// Returns array of strings with installable languages for specified application which depots are present in current directory.
         /// </summary>
-        /// <param name="gameName">Name of the game.</param>
-        /// <returns>Array of strings with languages for specified game which components are present in curent directory.</returns>
-        public String[] GetInstallableLanguages(String gameName)
+        /// <param name="appName">Name of the game.</param>
+        /// <returns>Array of strings with languages for specified application which depots are present in current directory.</returns>
+        public String[] GetInstallableLanguages(String appName)
         {
             Dictionary<String, String> languages;
-            SteamGame game = GetGame(gameName);
+            SteamApplication app = GetApplication(appName);
 
             languages = new Dictionary<String, String>();
 
-            if (game != null)
+            if (app != null)
             {
-                for (Int32 i = 0; i < game.ComponentsCount; i++)
+                for (Int32 i = 0; i < app.DepotsCount; i++)
                 {
-                    GameComponent component = game.GetComponent(i);
+                    SteamDepot depot = app.GetDepot(i);
 
-                    if (component.CheckState == CheckState.Installable)
+                    if (depot.CheckState == CheckState.Installable)
                     {
-                        for (Int32 j = 0; j < component.ComponentCulturesCount; j++)
+                        for (Int32 j = 0; j < depot.CulturesCount; j++)
                         {
-                            CultureInfo componentCulture = component.GetCulture(j);
+                            CultureInfo depotCulture = depot.GetCulture(j);
 
-                            if (!component.IsInvariant && !languages.ContainsKey(componentCulture.EnglishName))
-                                languages.Add(componentCulture.EnglishName, componentCulture.EnglishName + " (" + componentCulture.NativeName + ")");
+                            if (!depot.IsInvariant && !languages.ContainsKey(depotCulture.EnglishName))
+                                languages.Add(depotCulture.EnglishName, depotCulture.EnglishName + " (" + depotCulture.NativeName + ")");
                         }
                     }
                 }
@@ -98,341 +107,382 @@ namespace SteamGamesInstaller
         }
 
         /// <summary>
-        /// Returns size of the game in bytes.
+        /// Returns size of application files in bytes for specified installation options.
         /// </summary>
         /// <param name="installOptions">Install options.</param>
-        /// <returns>Size of the game in bytes</returns>
-        public Int64 GetGameSize(InstallOptions installOptions)
+        /// <returns>Size of application files in bytes for specified installation options.</returns>
+        public Int64 GetFilesSize(Object installOptions)
         {
             if (installOptions == null)
                 throw new ArgumentNullException("installOptions");
 
-            SteamGame game = GetGame(installOptions.GameName);
+            InstallOptions installOpts = (InstallOptions)installOptions;
+            SteamApplication app = GetApplication(installOpts.ApplicationName);
 
-            if (game != null)
-                return game.CalculateSizeMethod(game, installOptions);
+            if (app != null)
+                return app.GetFilesSize(app, installOpts);
             else
-                return -1;
+                return -1L;
         }
 
         /// <summary>
-        /// Installs game with specified options.
+        /// Installs application with specified installation options in background thread.
         /// </summary>
-        /// <param name="installOptions">Install options.</param>
+        /// <param name="installOptions">Installation options.</param>
+        /// <param name="worker">BackgroundWorker object.</param>
         [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
-        public void InstallGame(InstallOptions installOptions, BackgroundWorker worker)
+        public void InstallApplication(Object installOptions, BackgroundWorker worker)
         {
             if (installOptions == null)
                 throw new ArgumentNullException("installOptions");
 
-            SteamGame game = GetGame(installOptions.GameName);
+            InstallOptions installOpts = (InstallOptions)installOptions;
+            SteamApplication app = GetApplication(installOpts.ApplicationName);
 
-            if (game != null)
+            if (app != null && app.CheckState == CheckState.Installable)
             {
-                game.GameInstallMethod(game, installOptions, -1L, worker);
+                app.InstallApplication(app, installOpts, -1L, worker);
 
-
-                if (!installOptions.IsUseSteam && installOptions.IsUseInstallscript && game.Installscript != null)
+                if (installOpts.IsUseInstallScript && !String.IsNullOrEmpty(app.InstallScriptName))
                 {
-                    ValveDataFile vdf = new ValveDataFile(game.Installscript);
+                    String installScriptName = Path.Combine(Path.Combine(installOpts.InstallPath, app.InstallDirectoryName), app.InstallScriptName);
+                    ValveDataFile vdf = new ValveDataFile(installScriptName);
 
+                    vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOpts.InstallPath, app.InstallDirectoryName));
+                    vdf.ApplicationLanguage = installOpts.ApplicationCulture.EnglishName;
                     vdf.BackgroundWorker = worker;
-                    vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOptions.InstallDirectory, game.InstallDirectory));
-                    vdf.GameLanguage = installOptions.Culture.EnglishName;
 
                     vdf.ExecuteScript();
                 }
-
-                if (installOptions.IsUseFix)
-                    game.FixesInstallMethod(game, installOptions, worker);
             }
         }
 
-        # endregion Front end.
+        # endregion Code for front end.
+
+        public DirectoryInfo DepotsDirectory
+        {
+            get { return depotsDirectory; }
+            set { depotsDirectory = value; }
+        }
+
+        /// <summary>
+        /// Returns name of directory with fixes.
+        /// </summary>
+        public static String FixesDirectoryName
+        {
+            get { return "_Fixes"; }
+        }
+
+        /// <summary>
+        /// Returns name of directory with updates.
+        /// </summary>
+        public static String UpdatesDirectoryName
+        {
+            get { return "_Updates"; }
+        }
 
         # region Games list.
 
         /// <summary>
-        /// Populates games list with information about Steam games and their components.
+        /// Populates applications list with information about Steam applications and their depots.
         /// </summary>
-        private void PopulateGamesList()
+        private void PopulateApplicationsList()
         {
             // The Elder Scrolls V: Skyrim
-            games.Add(new SteamGame(72850, @"The Elder Scrolls V: Skyrim", @"common\Skyrim",
-                ComponentsCheckMethod72850, CalculateSizeMethod72850, GameInstallMethod72850, FixesInstallDefaultMethod));
-            games[games.Count - 1].AddComponent(new GameComponent(72851, true, @"Skyrim Content",
-                @"Skyrim Content", new CultureInfo[] { CultureInfo.InvariantCulture }));
-            games[games.Count - 1].AddComponent(new GameComponent(72852, true, @"Skyrim exe",
-                @"Skyrim exe", new CultureInfo[] { CultureInfo.InvariantCulture }));
-            games[games.Count - 1].AddComponent(new GameComponent(72853, false, @"The Elder Scrolls V: Skyrim english",
-                @"Skyrim english", new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72854, false, @"The Elder Scrolls V: Skyrim french",
-                @"Skyrim french", new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72855, false, @"The Elder Scrolls V: Skyrim italian",
-                @"Skyrim italian", new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72856, false, @"The Elder Scrolls V: Skyrim german",
-                @"Skyrim german", new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72857, false, @"The Elder Scrolls V: Skyrim spanish",
-                @"Skyrim spanish", new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72858, false, @"The Elder Scrolls V: Skyrim Polish",
-                @"Skyrim Polish", new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72859, false, @"The Elder Scrolls V: Skyrim Czech",
-                @"Skyrim Czech", new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72860, false, @"The Elder Scrolls V: Skyrim Russian",
-                @"Skyrim Russian", new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
-            games[games.Count - 1].AddComponent(new GameComponent(72861, false, @"The Elder Scrolls V: Skyrim Japanese",
-                @"The Elder Scrolls V Skyrim Japanese", new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
-            // "Skyrim Czech" and "Skyrim Polish" components use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
-            // files from "Skyrim english" component.
-            games[games.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
+            apps.Add(new SteamApplication(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", "installscript.vdf",
+                CheckDepots_72850, GetFilesSize_72850, InstallApplication_72850));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72851, @"Skyrim Content", @"Skyrim Content", false,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72852, @"Skyrim exe", @"Skyrim exe", true,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72855, @"The Elder Scrolls V: Skyrim italian", @"Skyrim italian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72856, @"The Elder Scrolls V: Skyrim german", @"Skyrim german", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72857, @"The Elder Scrolls V: Skyrim spanish", @"Skyrim spanish", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72858, @"The Elder Scrolls V: Skyrim Polish", @"Skyrim Polish", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72859, @"The Elder Scrolls V: Skyrim Czech", @"Skyrim Czech", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72860, @"The Elder Scrolls V: Skyrim Russian", @"Skyrim Russian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(72861, @"The Elder Scrolls V: Skyrim Japanese", @"The Elder Scrolls V Skyrim Japanese", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+            // "Skyrim Czech" and "Skyrim Polish" depots use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
+            // files from "Skyrim english" depot.
+            apps[apps.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
 
             // Terraria
-            games.Add(new SteamGame(105600, @"Terraria", @"common\Terraria",
-                ComponentsCheckDefaultMethod, CalculateSizeDefaultMethod, GameInstallDefaultMethod, FixesInstallDefaultMethod));
-            games[games.Count - 1].AddComponent(new GameComponent(105601, true, @"TerrariaRelease",
-                @"TerrariaRelease", new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            apps.Add(new SteamApplication(105600, @"Terraria", @"Terraria", "installscript.vdf",
+                CheckDepots, GetFilesSize, InstallApplication));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(105601, @"TerrariaRelease", @"TerrariaRelease", false, new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+
+            // Find depots for all applications
+            foreach (SteamApplication app in this.apps)
+                app.FindDepots(depotsDirectory.GetDirectories());
         }
 
         # endregion Games list.
 
-        #region Component check methods.
+        #region Check depots methods.
 
         /// <summary>
-        /// Default method for checking game components.
+        /// Checks depots.
         /// </summary>
-        /// <param name="game">SteamGame object.</param>
-        /// <param name="directories">Directories in curent directory.</param>
-        private static void ComponentsCheckDefaultMethod(SteamGame game, DirectoryInfo[] directories)
+        /// <param name="application">SteamApplication object.</param>
+        /// <param name="directories">Directories in current directory.</param>
+        private static void CheckDepots(SteamApplication application, DirectoryInfo[] directories)
         {
-            Boolean isNonInvariantComponentExists = false;
-            Boolean isNotInstallableRequiredComponentExists = false;
-
-            for (Int32 i = 0; i < game.ComponentsCount; i++)
+            if (application.CheckState == CheckState.NotChecked)
             {
-                GameComponent component = game.GetComponent(i);
+                Boolean isNonInvariantDepotExists = false;
+                Boolean isRequiredDepotNotExists = false;
 
-                foreach (DirectoryInfo directory in directories)
+                for (Int32 i = 0; i < application.DepotsCount; i++)
                 {
-                    if (String.Compare(component.NcfFileName, SgiUtils.TrimDirectoryVersion(directory.Name), StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        component.CheckState = CheckState.Installable;
-                        component.AddDirectory(directory);
+                    SteamDepot depot = application.GetDepot(i);
 
-                        if (!component.IsInvariant)
-                            isNonInvariantComponentExists = true;
+                    if (depot.GetDirectoriesCount(SteamDepotFileTypes.Common) > 0)
+                    {
+                        depot.CheckState = CheckState.Installable;
+                        if (!depot.IsInvariant)
+                            isNonInvariantDepotExists = true;
+                    }
+
+                    if (depot.CheckState != CheckState.Installable)
+                    {
+                        application.CheckState = CheckState.NotInstallable;
+                        if (!depot.IsOptional)
+                            isRequiredDepotNotExists = true;
                     }
                 }
 
-                if (component.CheckState != CheckState.Installable)
-                {
-                    game.CheckState = CheckState.NotInstallable;
-                    if (component.IsRequired)
-                        isNotInstallableRequiredComponentExists = true;
-                }
+                if (isRequiredDepotNotExists || !isNonInvariantDepotExists)
+                    application.CheckState = CheckState.NotInstallable;
+                else
+                    application.CheckState = CheckState.Installable;
             }
-
-            if (isNotInstallableRequiredComponentExists || !isNonInvariantComponentExists)
-                game.CheckState = CheckState.NotInstallable;
-            else
-                game.CheckState = CheckState.Installable;
         }
 
         /// <summary>
-        /// Checks components for "The Elder Scrolls V: Skyrim".
+        /// Checks depots for "The Elder Scrolls V: Skyrim".
         /// </summary>
-        /// <param name="game">SteamGame object.</param>
-        /// <param name="directories">Directories in curent directory.</param>
-        private void ComponentsCheckMethod72850(SteamGame game, DirectoryInfo[] directories)
+        /// <param name="application">SteamApplication object.</param>
+        /// <param name="directories">Directories in current directory.</param>
+        private void CheckDepots_72850(SteamApplication application, DirectoryInfo[] directories)
         {
-            ComponentsCheckDefaultMethod(game, directories);
-
-            // Game specific checks
-            GameComponent polish = game.GetComponentByAppId(72858);
-            GameComponent czech = game.GetComponentByAppId(72859);
-
-            if (polish != null || czech != null)
+            if (application.CheckState == CheckState.NotChecked)
             {
-                Boolean isSharedFilesExists = false;
-                GameComponent english = game.GetComponentByAppId(72853);
+                CheckDepots(application, directories);
 
-                if (english != null)
+                // Application specific scenario
+                SteamDepot polish = application.GetDepotById(72858);
+                SteamDepot czech = application.GetDepotById(72859);
+
+                if (polish != null || czech != null)
                 {
-                    DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
-                    String file1 = ((String[])game.CustomObject)[0];
-                    String file2 = ((String[])game.CustomObject)[1];
+                    Boolean isFile1Exist = false;
+                    Boolean isFile2Exist = false;
+                    String file1RelativeName = ((String[])application.CustomObject)[0];
+                    String file2RelativeName = ((String[])application.CustomObject)[1];
+                    SteamDepotFile[] files = application.FilesMap.GetFiles(SteamDepotFileTypes.Any, CultureInfo.GetCultureInfo("en"));
 
-                    if (englishDirectory != null &&
-                        File.Exists(Path.Combine(englishDirectory.FullName, file1)) && File.Exists(Path.Combine(englishDirectory.FullName, file2)))
+                    if (files != null)
                     {
-                        isSharedFilesExists = true;
-                    }
-                }
-
-                if (!isSharedFilesExists)
-                {
-                    polish.CheckState = CheckState.NotInstallable;
-                    czech.CheckState = CheckState.NotInstallable;
-                }
-            }
-        }
-
-        #endregion Component check methods.
-
-        #region Calculate size of installed game methods.
-
-        private static Int64 CalculateSizeDefaultMethod(SteamGame game, InstallOptions installOptions)
-        {
-            Int64 size = 0;
-
-            DirectoryInfo[] directories = GetDirectoriesToInstall(game, installOptions);
-
-            if (directories == null)
-                return -1;
-
-            foreach (DirectoryInfo directory in directories)
-            {
-                foreach (FileInfo file in directory.GetFiles("*", SearchOption.AllDirectories))
-                {
-                    size += file.Length;
-                }
-            }
-
-            return size;
-        }
-
-        private static Int64 CalculateSizeMethod72850(SteamGame game, InstallOptions installOptions)
-        {
-            Int64 size = CalculateSizeDefaultMethod(game, installOptions);
-
-            if (size != -1)
-            {
-                if (CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("pl")) ||
-                    CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("cs")))
-                {
-                    GameComponent english = game.GetComponentByAppId(72853);
-
-                    if (english != null)
-                    {
-                        DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
-                        String file1 = ((String[])game.CustomObject)[0];
-                        String file2 = ((String[])game.CustomObject)[1];
-
-                        if (englishDirectory != null &&
-                            File.Exists(Path.Combine(englishDirectory.FullName, file1)) && File.Exists(Path.Combine(englishDirectory.FullName, file2)))
+                        foreach (SteamDepotFile file in files)
                         {
-                            size += new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, file1)).Length;
-                            size += new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, file2)).Length;
+                            if (!isFile1Exist && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                                isFile1Exist = true;
+                            if (!isFile2Exist && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                                isFile2Exist = true;
+                            if (isFile1Exist && isFile2Exist)
+                                break;
+                        }
+
+                        if (!isFile1Exist || !isFile2Exist)
+                        {
+                            polish.CheckState = CheckState.NotInstallable;
+                            czech.CheckState = CheckState.NotInstallable;
                         }
                     }
+                }
+            }
+        }
 
+        #endregion Check depots methods.
+
+        #region Get files size methods.
+
+        /// <summary>
+        /// Returns size of application files in bytes for specified installation options.
+        /// </summary>
+        /// <param name="application">SteamApplication object.</param>
+        /// <param name="installOptions">Installation options.</param>
+        /// <returns>Size of application files in bytes for specified installation options.</returns>
+        private Int64 GetFilesSize(SteamApplication application, InstallOptions installOptions)
+        {
+            Int64 size = 0L;
+            if (installOptions.FilesType != SteamDepotFileTypes.None)
+            {
+                SteamDepotFile[] files = application.GetFiles(installOptions);
+
+                if (files != null)
+                {
+                    foreach (SteamDepotFile file in files)
+                        size += new FileInfo(file.FullName).Length;
+                }
+            }
+            return size;
+        }
+
+        /// <summary>
+        /// Returns size of "The Elder Scrolls V: Skyrim" files in bytes for specified installation options.
+        /// </summary>
+        /// <param name="application">SteamApplication object.</param>
+        /// <param name="installOptions">Installation options.</param>
+        /// <param name="filesMap">FilesMap object.</param>
+        /// <returns>Size of application files in bytes for specified installation options.</returns>
+        private Int64 GetFilesSize_72850(SteamApplication application, InstallOptions installOptions)
+        {
+            Int64 size = 0L;
+
+            if (installOptions.FilesType != SteamDepotFileTypes.None)
+            {
+                size = GetFilesSize(application, installOptions);
+
+                // Application specific scenario
+                if (CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("pl")) ||
+                    CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("cs")))
+                {
+                    SteamDepotFile file1 = null;
+                    SteamDepotFile file2 = null;
+                    String file1RelativeName = ((String[])application.CustomObject)[0];
+                    String file2RelativeName = ((String[])application.CustomObject)[1];
+                    SteamDepotFile[] files = application.FilesMap.GetFiles(installOptions.FilesType, CultureInfo.GetCultureInfo("en"));
+
+                    if (files != null)
+                    {
+                        foreach (SteamDepotFile file in files)
+                        {
+                            if (file1 == null && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                file1 = file;
+                                size += new FileInfo(file1.FullName).Length;
+                            }
+                            if (file2 == null && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                file2 = file;
+                                size += new FileInfo(file2.FullName).Length;
+                            }
+                            if (file1 != null && file2 != null)
+                                break;
+                        }
+                    }
                 }
             }
 
             return size;
         }
 
-        #endregion Calculate size of installed game methods.
+        #endregion Get files size methods.
 
-        #region Game install methods.
+        #region Install application methods.
 
         /// <summary>
-        /// Default installation method.
+        /// Installs application using specified installation options.
         /// </summary>
-        /// <param name="game">SteamGame object.</param>
+        /// <param name="application">SteamApplication object.</param>
         /// <param name="installOptions">InstallOptions object.</param>
-        /// <param name="gameSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
+        /// <param name="filesSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
         /// <param name="worker">BackgroundWorker object.</param>
         /// <returns>Size of installed files.</returns>
-        private static Int64 GameInstallDefaultMethod(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker)
+        private Int64 InstallApplication(SteamApplication application, InstallOptions installOptions, Int64 filesSize, BackgroundWorker worker)
         {
-            DirectoryInfo[] directories = GetDirectoriesToInstall(game, installOptions);
-            Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
-            Int64 copiedFilesSize = 0;
-            DirectoryInfo sourceDirectory;
-            DirectoryInfo destDirectory;
+            Int64 copiedFilesSize = 0L;
 
-            if (gameSize == -1)
-                gameSize = game.CalculateSizeMethod(game, installOptions);
-            game.Installscript = null;
-
-            // Non-recursive algorithm
-            foreach (DirectoryInfo componentDirectory in directories)
+            if (installOptions.FilesType != SteamDepotFileTypes.None)
             {
-                sourceDirectory = componentDirectory;
-                destDirectory = new DirectoryInfo(installOptions.InstallDirectory);
+                SteamDepotFile[] files = application.GetFiles(installOptions);
 
-                do
+                if (files != null)
                 {
-                    if (directoriesQueue.Count > 0)
-                    {
-                        sourceDirectory = directoriesQueue.Dequeue();
-                        destDirectory = new DirectoryInfo(Path.Combine(installOptions.InstallDirectory, sourceDirectory.FullName.Remove(0, componentDirectory.FullName.Length + 1)));
-                        destDirectory.Create();
-                        destDirectory.Attributes = sourceDirectory.Attributes;
-                    }
+                    DirectoryInfo destDirectory = new DirectoryInfo(installOptions.InstallPath);
 
-                    FileInfo[] files = sourceDirectory.GetFiles();
+                    if (filesSize == -1L)
+                        filesSize = application.GetFilesSize(application, installOptions);
 
-                    foreach (FileInfo file in files)
+                    foreach (SteamDepotFile file in files)
                     {
                         if (worker.CancellationPending)
                             break;
 
-                        copiedFilesSize += CopyFile(file, Path.Combine(destDirectory.FullName, file.Name), worker, gameSize, copiedFilesSize);
-
-                        if (String.Compare(file.Name, "installscript.vdf", StringComparison.OrdinalIgnoreCase) == 0)
-                            game.Installscript = new FileInfo(Path.Combine(destDirectory.FullName, file.Name));
+                        copiedFilesSize += SgiUtils.CopyFile(file, Path.Combine(destDirectory.FullName, file.RelativeName),
+                            filesSize, copiedFilesSize, worker);
                     }
-
-                    DirectoryInfo[] subDirectories = sourceDirectory.GetDirectories();
-
-                    foreach (DirectoryInfo subDirectory in subDirectories)
-                    {
-                        directoriesQueue.Enqueue(subDirectory);
-                    }
-                } while (directoriesQueue.Count > 0 && !worker.CancellationPending);
-
-                if (worker.CancellationPending)
-                    break;
+                }
             }
+
+            if (filesSize == 0L)
+                worker.ReportProgress(100);
 
             return copiedFilesSize;
         }
 
         /// <summary>
-        /// Installation method for "The Elder Scrolls V: Skyrim".
+        /// Installs "The Elder Scrolls V: Skyrim" using specified installation options.
         /// </summary>
-        /// <param name="game">SteamGame object.</param>
+        /// <param name="application">SteamApplication object.</param>
         /// <param name="installOptions">InstallOptions object.</param>
-        /// <param name="gameSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
+        /// <param name="filesSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
         /// <param name="worker">BackgroundWorker object.</param>
         /// <returns>Size of installed files.</returns>
-        private Int64 GameInstallMethod72850(SteamGame game, InstallOptions installOptions, Int64 gameSize, BackgroundWorker worker)
+        private Int64 InstallApplication_72850(SteamApplication application, InstallOptions installOptions, Int64 filesSize, BackgroundWorker worker)
         {
-            if (gameSize == -1)
-                gameSize = game.CalculateSizeMethod(game, installOptions);
+            Int64 installedFilesSize = 0L;
 
-            Int64 installedFilesSize = GameInstallDefaultMethod(game, installOptions, gameSize, worker);
-
-            if (!worker.CancellationPending)
+            if (installOptions.FilesType != SteamDepotFileTypes.None)
             {
-                if (CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("pl")) ||
-                    CultureInfo.Equals(installOptions.Culture, CultureInfo.GetCultureInfo("cs")))
+                if (filesSize == -1L)
+                    filesSize = application.GetFilesSize(application, installOptions);
+
+                installedFilesSize = InstallApplication(application, installOptions, filesSize, worker);
+
+                // Application specific scenario
+                if (!worker.CancellationPending)
                 {
-                    GameComponent english = game.GetComponentByAppId(72853);
-
-                    if (english != null)
+                    if (CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("pl")) ||
+                        CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("cs")))
                     {
-                        DirectoryInfo englishDirectory = english.DirectoryWithLatestVersion;
-                        String fileName1 = ((String[])game.CustomObject)[0];
-                        String fileName2 = ((String[])game.CustomObject)[1];
-                        FileInfo file1 = new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, fileName1));
-                        FileInfo file2 = new FileInfo(Path.Combine(english.DirectoryWithLatestVersion.FullName, fileName2));
+                        SteamDepotFile file1 = null;
+                        SteamDepotFile file2 = null;
+                        String file1RelativeName = ((String[])application.CustomObject)[0];
+                        String file2RelativeName = ((String[])application.CustomObject)[1];
+                        SteamDepotFile[] files = application.FilesMap.GetFiles(installOptions.FilesType, CultureInfo.GetCultureInfo("en"));
 
-                        if (englishDirectory != null && File.Exists(file1.FullName) && File.Exists(file2.FullName))
+                        if (files != null)
                         {
-                            installedFilesSize += CopyFile(file1, Path.Combine(installOptions.InstallDirectory, fileName1), worker, gameSize, installedFilesSize);
-                            installedFilesSize += CopyFile(file2, Path.Combine(installOptions.InstallDirectory, fileName2), worker, gameSize, installedFilesSize);
+                            foreach (SteamDepotFile file in files)
+                            {
+                                if (file1 == null && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                                {
+                                    file1 = file;
+                                    installedFilesSize += SgiUtils.CopyFile(file1, Path.Combine(installOptions.InstallPath, file1RelativeName),
+                                        filesSize, installedFilesSize, worker);
+                                }
+                                if (file2 == null && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                                {
+                                    file2 = file;
+                                    installedFilesSize += SgiUtils.CopyFile(file2, Path.Combine(installOptions.InstallPath, file2RelativeName),
+                                        filesSize, installedFilesSize, worker);
+                                }
+                                if (file1 != null && file2 != null)
+                                    break;
+                            }
                         }
                     }
                 }
@@ -441,150 +491,17 @@ namespace SteamGamesInstaller
             return installedFilesSize;
         }
 
-        #endregion Game install methods.
+        #endregion Install application methods.
 
-        #region Fixes install methods.
-
-        private void FixesInstallDefaultMethod(SteamGame game, InstallOptions installOptions, BackgroundWorker worker)
+        private SteamApplication GetApplication(String applicationName)
         {
-            DirectoryInfo fixesDirectory = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "_Fixes"));
-
-            if (fixesDirectory.Exists)
+            foreach (SteamApplication app in this.apps)
             {
-                DirectoryInfo[] fixDirectories = fixesDirectory.GetDirectories();
-
-                if (fixDirectories != null && fixDirectories.Length > 0)
-                {
-                    for (Int32 i = 0; i < game.ComponentsCount; i++)
-                    {
-                        GameComponent component = game.GetComponent(i);
-
-                        if (component.IsInvariant || component.IsHaveCulture(installOptions.Culture))
-                        {
-                            DirectoryInfo componentDirectory = component.DirectoryWithLatestVersion;
-
-                            if (componentDirectory != null)
-                            {
-                                DirectoryInfo fixDirectory = null;
-
-                                foreach (DirectoryInfo directory in fixDirectories)
-                                {
-                                    if (String.Compare(directory.Name, componentDirectory.Name, StringComparison.OrdinalIgnoreCase) == 0)
-                                    {
-                                        fixDirectory = directory;
-                                        break;
-                                    }
-                                }
-
-                                if (fixDirectory != null)
-                                    SgiUtils.CopyDirectory(fixDirectory.FullName, installOptions.InstallDirectory, true, true, worker);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        #endregion Fixes install methods.
-
-        private void CheckGames()
-        {
-            DirectoryInfo[] directories = new DirectoryInfo(Environment.CurrentDirectory).GetDirectories("*", SearchOption.TopDirectoryOnly);
-
-            foreach (SteamGame game in this.games)
-                game.ComponentsCheckMethod(game, directories);
-        }
-
-        private SteamGame GetGame(String gameName)
-        {
-            foreach (SteamGame game in this.games)
-            {
-                if (game.AppName == gameName)
-                {
-                    return game;
-                }
+                if (String.Compare(app.Name, applicationName, StringComparison.OrdinalIgnoreCase) == 0)
+                    return app;
             }
 
             return null;
-        }
-
-        private static DirectoryInfo[] GetDirectoriesToInstall(SteamGame game, InstallOptions installOptions)
-        {
-            List<DirectoryInfo> directories = new List<DirectoryInfo>();
-
-            if (game.CheckState == CheckState.Installable)
-            {
-                // Add directories of required components and directories of components with culture specified in installOptions
-                // and directories of invariant components
-                for (Int32 i = 0; i < game.ComponentsCount; i++)
-                {
-                    GameComponent component = game.GetComponent(i);
-
-                    if (component.CheckState == CheckState.Installable && (component.IsRequired || component.IsHaveCulture(installOptions.Culture)) || component.IsInvariant)
-                    {
-                        DirectoryInfo directory = component.DirectoryWithLatestVersion;
-
-                        if (directory != null)
-                            directories.Add(directory);
-                    }
-                }
-            }
-
-            if (directories.Count > 0)
-                return directories.ToArray();
-            else
-                return null;
-        }
-
-        private static Int64 CopyFile(FileInfo sourceFile, string destPath, BackgroundWorker worker, Int64 gameSize, Int64 copiedFilesSize)
-        {
-            if (!worker.CancellationPending)
-            {
-                Byte[] buffer = new Byte[1024 * 1024 * 10]; // 10 MB buffer
-                FileInfo destFile = new FileInfo(destPath);
-                FileStream source;
-                FileStream destination;
-                Int64 offset = 0;
-                Int32 blockSize;
-                Int32 progressPercent = (Int32)((float)copiedFilesSize / gameSize * 100);
-
-                source = sourceFile.OpenRead();
-                destination = destFile.Create();
-
-                while (offset < sourceFile.Length && !worker.CancellationPending)
-                {
-                    if (offset + buffer.Length <= sourceFile.Length)
-                        blockSize = buffer.Length;
-                    else
-                        blockSize = (Int32)(sourceFile.Length - offset);
-
-                    source.Read(buffer, 0, blockSize);
-
-                    destination.Write(buffer, 0, blockSize);
-
-                    offset += blockSize;
-                    copiedFilesSize += blockSize;
-
-                    // We don't want spam parent thread with report messages
-                    if ((Int32)((float)copiedFilesSize / gameSize * 100) > progressPercent)
-                    {
-                        progressPercent = (Int32)((float)copiedFilesSize / gameSize * 100);
-                        worker.ReportProgress(progressPercent);
-                    }
-                }
-
-                source.Close();
-                destination.Close();
-
-                destFile.Attributes = sourceFile.Attributes;
-                destFile.CreationTimeUtc = sourceFile.CreationTimeUtc;
-                destFile.LastAccessTimeUtc = sourceFile.LastAccessTimeUtc;
-                destFile.LastWriteTimeUtc = sourceFile.LastWriteTimeUtc;
-
-                return offset;
-            }
-            else
-                return 0;
         }
     }
 
@@ -595,76 +512,74 @@ namespace SteamGamesInstaller
         NotInstallable
     }
 
-    public class SteamGame
+    public class SteamApplication
     {
-        private Int32 appId;
-        private String appName;
+        private Int32 id;
+        private String name;
         private String installDirectory;
-        private ComponentsCheckMethod componentsCheckMethod;
-        private CalculateSizeMethod calculateSizeMethod;
-        private GameInstallMethod gameInstallMethod;
-        private FixesInstallMethod fixesInstallMethod;
+        private CheckDepotsMethod checkDepots;
+        private GetFilesSizeMethod getFilesSize;
+        private InstallApplicationMethod installApplication;
         private CheckState checkState;
-        private List<GameComponent> components;
-        private FileInfo installscript;
+        private List<SteamDepot> depots;
+        private String installScriptName;
         private Object customObject;
+        /// <summary>
+        /// Files map for this application.
+        /// Callers must not use this property directly! Use SteamApplication.FilesMap field instead.
+        /// </summary>
+        private static FilesMap filesMap; // use staticly for memory economy
 
-        public SteamGame(Int32 id, String name, String directory, ComponentsCheckMethod checkMethod,
-            CalculateSizeMethod calcSizeMethod, GameInstallMethod installMethod, FixesInstallMethod fixesMethod)
+        public SteamApplication(Int32 applicationId, String appName, String installDirectoryName, String installScriptFileName,
+            CheckDepotsMethod checkDepotsMethod, GetFilesSizeMethod getFilesSizeMethod, InstallApplicationMethod installApplicationMethod)
         {
-            appId = id;
-            appName = name;
-            installDirectory = directory;
-            componentsCheckMethod = checkMethod;
-            calculateSizeMethod = calcSizeMethod;
-            gameInstallMethod = installMethod;
-            fixesInstallMethod = fixesMethod;
+            id = applicationId;
+            name = appName;
+            installDirectory = Path.Combine("common", installDirectoryName);
+            installScriptName = installScriptFileName;
+            checkDepots = checkDepotsMethod;
+            getFilesSize = getFilesSizeMethod;
+            installApplication = installApplicationMethod;
             checkState = CheckState.NotChecked;
-            components = new List<GameComponent>();
-            installscript = null;
+            depots = new List<SteamDepot>();
             customObject = null;
+            filesMap = null;
         }
 
-        public Int32 AppId
+        public Int32 Id
         {
-            get { return appId; }
-            set { appId = value; }
+            get { return id; }
+            set { id = value; }
         }
 
-        public String AppName
+        public String Name
         {
-            get { return appName; }
-            set { appName = value; }
+            get { return name; }
+            set { name = value; }
         }
 
-        public String InstallDirectory
+        public String InstallDirectoryName
         {
             get { return installDirectory; }
             set { installDirectory = value; }
         }
 
-        public ComponentsCheckMethod ComponentsCheckMethod
+        public CheckDepotsMethod CheckDepots
         {
-            get { return componentsCheckMethod; }
-            set { componentsCheckMethod = value; }
+            get { return checkDepots; }
+            set { checkDepots = value; }
         }
 
-        public CalculateSizeMethod CalculateSizeMethod
+        public GetFilesSizeMethod GetFilesSize
         {
-            get { return calculateSizeMethod; }
-            set { calculateSizeMethod = value; }
+            get { return getFilesSize; }
+            set { getFilesSize = value; }
         }
 
-        public GameInstallMethod GameInstallMethod
+        public InstallApplicationMethod InstallApplication
         {
-            get { return gameInstallMethod; }
-            set { gameInstallMethod = value; }
-        }
-
-        public FixesInstallMethod FixesInstallMethod
-        {
-            get { return fixesInstallMethod; }
-            set { fixesInstallMethod = value; }
+            get { return installApplication; }
+            set { installApplication = value; }
         }
 
         public CheckState CheckState
@@ -673,10 +588,10 @@ namespace SteamGamesInstaller
             set { checkState = value; }
         }
 
-        public FileInfo Installscript
+        public String InstallScriptName
         {
-            get { return installscript; }
-            set { installscript = value; }
+            get { return installScriptName; }
+            set { installScriptName = value; }
         }
 
         public Object CustomObject
@@ -685,110 +600,147 @@ namespace SteamGamesInstaller
             set { customObject = value; }
         }
 
-        public void AddComponent(GameComponent component)
+        public FilesMap FilesMap
         {
-            components.Add(component);
-        }
-
-        public GameComponent GetComponent(Int32 index)
-        {
-            return components[index];
-        }
-
-        public Int32 ComponentsCount
-        {
-            get { return components.Count; }
-        }
-
-        public GameComponent GetComponentByNcfFileName(String directoryName)
-        {
-            directoryName = SgiUtils.TrimDirectoryVersion(directoryName);
-
-            foreach (GameComponent component in components)
+            get
             {
-                if (String.Compare(component.NcfFileName, directoryName, StringComparison.OrdinalIgnoreCase) == 0)
-                    return component;
+                // Create new files map if not exist or created not for this application
+                if (filesMap == null || filesMap.Application != this)
+                    filesMap = new FilesMap(this);
+
+                return filesMap;
+            }
+        }
+
+        public void AddDepot(SteamDepot depot)
+        {
+            depots.Add(depot);
+        }
+
+        public SteamDepot GetDepot(Int32 index)
+        {
+            return depots[index];
+        }
+
+        public Int32 DepotsCount
+        {
+            get { return depots.Count; }
+        }
+
+        public SteamDepot GetDepotByFileName(String depotFileName)
+        {
+            depotFileName = SteamDepot.TrimDirectoryVersion(depotFileName);
+
+            foreach (SteamDepot depot in depots)
+            {
+                if (String.Compare(depot.FileName, depotFileName, StringComparison.OrdinalIgnoreCase) == 0)
+                    return depot;
             }
 
             return null;
         }
 
-        public GameComponent GetComponentByAppId(Int32 applicationId)
+        public SteamDepot GetDepotById(Int32 depotId)
         {
-            foreach (GameComponent component in components)
+            foreach (SteamDepot depot in depots)
             {
-                if (component.AppId == applicationId)
-                    return component;
+                if (depot.Id == depotId)
+                    return depot;
             }
 
             return null;
+        }
+
+        public void FindDepots(DirectoryInfo[] directories)
+        {
+            foreach (SteamDepot depot in depots)
+                depot.FindDepot(directories);
+
+            CheckDepots(this, directories);
+        }
+
+        public SteamDepotFile[] GetFiles(InstallOptions installOptions)
+        {
+            if (installOptions == null)
+                throw new ArgumentNullException("installOptions");
+
+            SteamDepotFileTypes filesType = installOptions.FilesType;
+
+            if (filesType != SteamDepotFileTypes.None)
+            {
+                return FilesMap.GetFiles(filesType, installOptions.ApplicationCulture);
+            }
+            else
+                return null;
         }
     }
 
-    public class GameComponent
+    public class SteamDepot
     {
-        private Int32 appId;
-        private Boolean isComponentRequired;
-        private String appName;
-        private String ncfFileName;
-        private List<CultureInfo> componentCultures;
+        private Int32 id;
+        private Boolean isOptional;
+        private String name;
+        private String fileName;
+        private List<CultureInfo> cultures;
         private CheckState checkState;
-        private List<DirectoryInfo> directories;
+        private Dictionary<Int32, DirectoryInfo> commonDirectories;
+        private Dictionary<Int32, DirectoryInfo> fixesDirectories;
 
-        public GameComponent(Int32 id, Boolean isRequired, String name, String fileName, CultureInfo[] cultures)
+        public SteamDepot(Int32 depotId, String depotName, String depotFileName, Boolean isDepotOptional, CultureInfo[] depotCultures)
         {
-            if (String.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException("fileName");
-            if (cultures == null)
-                throw new ArgumentNullException("cultures");
-            if (cultures.Length < 1)
-                throw new ArgumentException("Component should have at least one culture.", "cultures");
+            if (String.IsNullOrEmpty(depotFileName))
+                throw new ArgumentNullException("depotFileName");
+            if (depotCultures == null)
+                throw new ArgumentNullException("depotCultures");
+            if (depotCultures.Length < 1)
+                throw new ArgumentException("Depot must have at least one culture.", "depotCultures");
 
-            appId = id;
-            isComponentRequired = isRequired;
-            appName = name;
-            ncfFileName = fileName;
-            componentCultures = new List<CultureInfo>(1);
+            id = depotId;
+            name = depotName;
+            fileName = depotFileName;
+            isOptional = isDepotOptional;
+            cultures = new List<CultureInfo>(1);
 
-            foreach (CultureInfo culture in cultures)
-                componentCultures.Add(culture);
+            foreach (CultureInfo culture in depotCultures)
+                cultures.Add(culture);
 
             checkState = CheckState.NotChecked;
-            directories = new List<DirectoryInfo>();
+            commonDirectories = new Dictionary<Int32, DirectoryInfo>(0);
+            fixesDirectories = new Dictionary<Int32, DirectoryInfo>(0);
         }
 
-        public Int32 AppId
+        public Int32 Id
         {
-            get { return appId; }
-            set { appId = value; }
+            get { return id; }
+            set { id = value; }
         }
 
-        public Boolean IsRequired
+        public Boolean IsOptional
         {
-            get { return isComponentRequired; }
-            set { isComponentRequired = value; }
+            get { return isOptional; }
+            set { isOptional = value; }
         }
 
-        public String AppName
+        public String Name
         {
-            get { return appName; }
-            set { appName = value; }
+            get { return name; }
+            set { name = value; }
         }
 
-        public String NcfFileName
+        public String FileName
         {
-            get { return ncfFileName; }
-            set { ncfFileName = value; }
+            get { return fileName; }
+            set { fileName = value; }
         }
 
         public CultureInfo GetCulture(Int32 index)
         {
-            return componentCultures[index];
+            return cultures[index];
         }
 
-        public Int32 ComponentCulturesCount
+        public Int32 CulturesCount
         {
-            get { return componentCultures.Count; }
+            get { return cultures.Count; }
         }
 
         public CheckState CheckState
@@ -797,26 +749,81 @@ namespace SteamGamesInstaller
             set { checkState = value; }
         }
 
-        public void AddDirectory(DirectoryInfo directory)
+        public void FindDepot(DirectoryInfo[] directories)
         {
-            directories.Add(directory);
+            if (directories == null)
+                throw new ArgumentNullException("directories");
+
+            // Add common directories
+            AddDirectories(directories, SteamDepotFileTypes.Common);
+
+            // Add fixes directories if finded directory with fixes
+            foreach (DirectoryInfo directory in directories)
+            {
+                if (String.Compare(directory.Name, SgiManager.FixesDirectoryName, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    AddDirectories(directory.GetDirectories(), SteamDepotFileTypes.Fix);
+                    break;
+                }
+            }
         }
 
-        public DirectoryInfo GetDirectory(Int32 index)
+        public void AddDirectories(DirectoryInfo[] directories, SteamDepotFileTypes filesType)
         {
-            return directories[index];
+            if (directories == null)
+                throw new ArgumentNullException("directories");
+
+            Dictionary<Int32, DirectoryInfo> depotDirectories;
+
+            if (filesType == SteamDepotFileTypes.Common)
+                depotDirectories = commonDirectories;
+            else if (filesType == SteamDepotFileTypes.Fix)
+                depotDirectories = fixesDirectories;
+            else // TODO: updates system
+                throw new ArgumentException("Invalid files type.", "filesType");
+
+            foreach (DirectoryInfo directory in directories)
+            {
+                if (String.Compare(SteamDepot.TrimDirectoryVersion(directory.Name), fileName, StringComparison.OrdinalIgnoreCase) == 0)
+                    depotDirectories.Add(GetDirectoryVersion(directory.Name), directory);
+            }
         }
 
-        public Int32 DirectoriesCount
+        public DirectoryInfo GetDirectory(Int32 filesVersion, SteamDepotFileTypes filesType)
         {
-            get { return directories.Count; }
+            if (filesType == SteamDepotFileTypes.Common && commonDirectories.ContainsKey(filesVersion))
+                return commonDirectories[filesVersion];
+            else if (filesType == SteamDepotFileTypes.Fix && fixesDirectories.ContainsKey(filesVersion))
+                return fixesDirectories[filesVersion];
+            else // TODO: updates system
+                return null;
+        }
+
+        public Int32 GetDirectoriesCount(SteamDepotFileTypes filesType)
+        {
+            if (filesType == SteamDepotFileTypes.Common)
+                return commonDirectories.Count;
+            else if (filesType == SteamDepotFileTypes.Fix)
+                return fixesDirectories.Count;
+            else // TODO: updates system
+                throw new ArgumentException("Invalid files type.", "filesType");
+        }
+
+        public Int32[] GetDepotVersions(SteamDepotFileTypes filesType)
+        {
+            if (filesType == SteamDepotFileTypes.Common)
+                return commonDirectories.Keys.ToArray();
+            else if (filesType == SteamDepotFileTypes.Fix)
+                return fixesDirectories.Keys.ToArray();
+            else // TODO: updates system
+                throw new ArgumentException("Invalid files type.", "filesType");
         }
 
         public Boolean IsInvariant
         {
             get
             {
-                foreach (CultureInfo componentCulture in this.componentCultures)
+                foreach (CultureInfo componentCulture in this.cultures)
                 {
                     if (CultureInfo.Equals(componentCulture, CultureInfo.InvariantCulture))
                         return true;
@@ -828,7 +835,7 @@ namespace SteamGamesInstaller
 
         public Boolean IsHaveCulture(CultureInfo culture)
         {
-            foreach (CultureInfo componentCulture in this.componentCultures)
+            foreach (CultureInfo componentCulture in this.cultures)
             {
                 if (CultureInfo.Equals(componentCulture, culture))
                     return true;
@@ -837,153 +844,518 @@ namespace SteamGamesInstaller
             return false;
         }
 
-        public DirectoryInfo DirectoryWithLatestVersion
+        /// <summary>
+        /// Returns latest version of files in depot with specified type.
+        /// </summary>
+        public Int32 GetLatestVersion(SteamDepotFileTypes filesType)
         {
-            get
+            Int32 latestVersion = -1;
+            Dictionary<Int32, DirectoryInfo> directories;
+
+            if (filesType == SteamDepotFileTypes.Common)
+                directories = commonDirectories;
+            else if (filesType == SteamDepotFileTypes.Fix)
+                directories = fixesDirectories;
+            else // TODO: updates system
+                throw new ArgumentException("Invalid files type.", "filesType");
+
+            foreach (Int32 directoryVersion in directories.Keys)
             {
-                Int32 latestVersion = -1;
-                DirectoryInfo latestVersionDirectory = null;
-
-                foreach (DirectoryInfo directory in this.directories)
-                {
-                    Int32 directoryVersion = SgiUtils.GetDirectoryVersion(directory.Name);
-
-                    if (directoryVersion >= latestVersion)
-                    {
-                        latestVersion = directoryVersion;
-                        latestVersionDirectory = directory;
-                    }
-                }
-
-                return latestVersionDirectory;
-            }
-        }
-    }
-
-    public class InstallOptions
-    {
-        String gameName;
-        Boolean isUseSteam;
-        Boolean isUseInstallscript;
-        Boolean isUseFix;
-        String installDirectory;
-        CultureInfo culture;
-
-        public InstallOptions(String name, Boolean isSteam, Boolean isExecuteInstallscript, Boolean isInstallFixes, String directory, String language)
-        {
-            gameName = name;
-            isUseSteam = isSteam;
-            isUseInstallscript = isExecuteInstallscript;
-            isUseFix = isInstallFixes;
-            installDirectory = directory;
-            culture = CultureInfo.InvariantCulture;
-
-            foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.AllCultures))
-            {
-                if (String.Compare(ci.EnglishName + " (" + ci.NativeName + ")", language, StringComparison.OrdinalIgnoreCase) == 0)
-                    culture = ci;
-            }
-        }
-
-        public String GameName
-        {
-            get { return gameName; }
-            set { gameName = value; }
-        }
-
-        public Boolean IsUseSteam
-        {
-            get { return isUseSteam; }
-            set { isUseSteam = value; }
-        }
-
-        public Boolean IsUseInstallscript
-        {
-            get { return isUseInstallscript; }
-            set { isUseInstallscript = value; }
-        }
-
-        public Boolean IsUseFix
-        {
-            get { return isUseFix; }
-            set { isUseFix = value; }
-        }
-
-        public String InstallDirectory
-        {
-            get { return installDirectory; }
-            set { installDirectory = value; }
-        }
-
-        public CultureInfo Culture
-        {
-            get { return culture; }
-            set { culture = value; }
-        }
-    }
-
-    public static class SgiUtils
-    {
-        #region Methods for working with directories.
-
-        public static String TrimDirectoryVersion(String directoryName)
-        {
-            if (String.IsNullOrEmpty(directoryName))
-                throw new ArgumentNullException("directoryName");
-
-            Int32 trimIndex = -1;
-
-            if (directoryName.Contains('.') && (directoryName.LastIndexOf('.') != directoryName.Length - 1))
-            {
-                trimIndex = directoryName.LastIndexOf('.');
-                Int32 i = directoryName.LastIndexOf('.') + 1;
-
-                if (Char.ToLowerInvariant(directoryName[i]) == 'v')
-                    i++;
-
-                if (i == directoryName.Length) // if string ended with ".v"
-                    trimIndex = -1;
-
-                while (i < directoryName.Length)
-                {
-                    if (Char.IsNumber(directoryName[i]) == false)
-                    {
-                        trimIndex = -1;
-                        break;
-                    }
-
-                    i++;
-                }
+                if (directoryVersion >= latestVersion)
+                    latestVersion = directoryVersion;
             }
 
-            if (trimIndex != -1)
-                return directoryName.Substring(0, trimIndex);
-
-            return directoryName;
+            return latestVersion;
         }
 
+        public DirectoryInfo GetLatestVersionDirectory(SteamDepotFileTypes filesType)
+        {
+            return GetDirectory(GetLatestVersion(filesType), filesType);
+        }
+
+        /// <summary>
+        /// Returns array with files in depot of specified version and type.
+        /// </summary>
+        /// <param name="filesVersion">Version of files.</param>
+        /// <param name="filesType">Type of files.</param>
+        /// <returns>Array with files of specified version and type.</returns>
+        public FileInfo[] GetFiles(Int32 filesVersion, SteamDepotFileTypes filesType)
+        {
+            List<FileInfo> files = new List<FileInfo>();
+            Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
+            DirectoryInfo directory = GetDirectory(filesVersion, filesType);
+            DirectoryInfo[] subDirectories;
+            FileInfo[] depotFiles;
+
+            do
+            {
+                if (directoriesQueue.Count > 0)
+                    directory = directoriesQueue.Dequeue();
+
+                depotFiles = directory.GetFiles();
+
+                foreach (FileInfo file in depotFiles)
+                    files.Add(file);
+
+                subDirectories = directory.GetDirectories();
+
+                foreach (DirectoryInfo subDirectory in subDirectories)
+                    directoriesQueue.Enqueue(subDirectory);
+            } while (directoriesQueue.Count > 0);
+
+            return files.ToArray();
+        }
+
+        /// <summary>
+        /// Returns version of specified directory name or -1 if directory have not valid version.
+        /// Examples: for "directory.17" version is 17, for "directory.v17" - 17, for "directory.V17" - 17,
+        /// for "directory.-17" - -1, for "directory.extension" - -1, for "directory" - -1.
+        /// </summary>
+        /// <param name="directoryName">Name of directory.</param>
+        /// <returns>Version of specified directory name or -1 if directory have not valid version.</returns>
         public static Int32 GetDirectoryVersion(String directoryName)
         {
             if (String.IsNullOrEmpty(directoryName))
                 throw new ArgumentNullException("directoryName");
 
-            Int32 version;
-            Int32 trimedStringLength = SgiUtils.TrimDirectoryVersion(directoryName).Length;
-            String versionString = String.Empty;
+            Int32 version = -1;
+            String extension = Path.GetExtension(directoryName);
 
-            if (trimedStringLength < directoryName.Length)
+            if (!String.IsNullOrEmpty(extension) && extension[0] == '.')
             {
-                versionString = directoryName.Substring(trimedStringLength, directoryName.Length - trimedStringLength - 1);
+                extension = extension.Remove(0, 1);
 
-                if (Char.ToLowerInvariant(versionString[0]) == 'v')
-                    versionString = versionString.Remove(0, 1);
+                if (Char.ToLowerInvariant(extension[0]) == 'v')
+                    extension = extension.Remove(0, 1);
+
+                if (String.IsNullOrEmpty(extension) || !Int32.TryParse(extension, out version) || version < 0)
+                    version = -1;
             }
-
-            if (String.IsNullOrEmpty(versionString) || !Int32.TryParse(versionString, out version))
-                version = -1;
 
             return version;
         }
+
+        /// <summary>
+        /// Returns directory name without version stump.
+        /// </summary>
+        /// <param name="directoryName">Name of directory.</param>
+        /// <returns>Directory name without version stump.</returns>
+        public static String TrimDirectoryVersion(String directoryName)
+        {
+            if (String.IsNullOrEmpty(directoryName))
+                throw new ArgumentNullException("directoryName");
+
+            if (GetDirectoryVersion(directoryName) < 0)
+                return directoryName;
+            else
+                return directoryName.Substring(0, directoryName.LastIndexOf('.'));
+        }
+    }
+
+    public class InstallOptions
+    {
+        String appName;
+        String path;
+        CultureInfo appCulture;
+        Boolean isUseInstallScript;
+        Boolean isUseCommon;
+        Boolean isUseFixes;
+
+        public InstallOptions(String applicationName, String installPath, String applicationLanguage, Boolean isExecuteInstallScript,
+            Boolean isInstallApplication, Boolean isInstallFixes)
+        {
+            if (String.IsNullOrEmpty(applicationName))
+                throw new ArgumentNullException("applicationName");
+            if (String.IsNullOrEmpty(installPath))
+                throw new ArgumentNullException("installPath");
+            if (String.IsNullOrEmpty(applicationLanguage))
+                throw new ArgumentNullException("applicationLanguage");
+
+            appName = applicationName;
+            path = installPath;
+            appCulture = null;
+
+            foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.AllCultures))
+            {
+                if (String.Compare(ci.EnglishName + " (" + ci.NativeName + ")", applicationLanguage, StringComparison.OrdinalIgnoreCase) == 0)
+                    appCulture = ci;
+            }
+
+            if (appCulture == null)
+                throw new ArgumentException(String.Format(CultureInfo.InvariantCulture, "Unknown language {0}.", applicationLanguage), "applicationLanguage");
+
+            isUseInstallScript = isExecuteInstallScript;
+            isUseCommon = isInstallApplication;
+            isUseFixes = isInstallFixes;
+        }
+
+        public String ApplicationName
+        {
+            get { return appName; }
+            set { appName = value; }
+        }
+
+        public String InstallPath
+        {
+            get { return path; }
+            set { path = value; }
+        }
+
+        public CultureInfo ApplicationCulture
+        {
+            get { return appCulture; }
+            set { appCulture = value; }
+        }
+
+        public Boolean IsUseInstallScript
+        {
+            get { return isUseInstallScript; }
+            set { isUseInstallScript = value; }
+        }
+
+        public Boolean IsUseCommon
+        {
+            get { return isUseCommon; }
+            set { isUseCommon = value; }
+        }
+
+        public Boolean IsUseFixes
+        {
+            get { return isUseFixes; }
+            set { isUseFixes = value; }
+        }
+
+        public SteamDepotFileTypes FilesType
+        {
+            get
+            {
+                SteamDepotFileTypes filesType = SteamDepotFileTypes.None;
+
+                if (isUseCommon)
+                    filesType |= SteamDepotFileTypes.Common;
+                if (isUseFixes)
+                    filesType |= SteamDepotFileTypes.Fix;
+
+                return filesType;
+            }
+        }
+    }
+
+    public class FilesMap
+    {
+        private SteamApplication app;
+        private Dictionary<String, List<SteamDepotFile>> files;
+
+        public FilesMap(SteamApplication application)
+        {
+            if (application == null)
+                throw new ArgumentNullException("application");
+
+            app = application;
+            files = new Dictionary<String, List<SteamDepotFile>>();
+
+            // Add files of application
+            for (Int32 i = 0; i < application.DepotsCount; i++)
+            {
+                SteamDepot depot = application.GetDepot(i);
+
+                if (depot.CheckState == CheckState.Installable)
+                {
+                    AddFiles(depot, depot.GetLatestVersion(SteamDepotFileTypes.Common), SteamDepotFileTypes.Common);
+                    AddFiles(depot, SteamDepotFileTypes.Fix);
+                }
+            }
+        }
+
+        public SteamApplication Application
+        {
+            get { return app; }
+            set { app = value; }
+        }
+
+        private void AddFiles(SteamDepot depot, SteamDepotFileTypes filesType)
+        {
+            Int32[] versions = depot.GetDepotVersions(filesType);
+
+            for (Int32 j = 0; j < versions.Length; j++)
+                AddFiles(depot, versions[j], filesType);
+        }
+
+        public void AddFiles(SteamDepot depot, Int32 filesVersion, SteamDepotFileTypes filesType)
+        {
+            if (depot == null)
+                throw new ArgumentNullException("depot");
+
+            FileInfo[] depotFiles = depot.GetFiles(filesVersion, filesType);
+
+            foreach (FileInfo file in depotFiles)
+                AddFile(file, filesVersion, filesType, depot);
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
+        public void AddFile(FileInfo file, Int32 fileVersion, SteamDepotFileTypes fileType, SteamDepot depot)
+        {
+            if (file == null)
+                throw new ArgumentNullException("file");
+            if (depot == null)
+                throw new ArgumentNullException("depot");
+
+            SteamDepotFile depotFile = new SteamDepotFile(file.FullName, fileVersion, fileType, depot);
+            String relativeName = depotFile.RelativeName;
+
+            if (files.ContainsKey(relativeName))
+                files[relativeName].Add(depotFile);
+            else
+            {
+                List<SteamDepotFile> filesList = new List<SteamDepotFile>();
+
+                filesList.Add(depotFile);
+                files.Add(relativeName, filesList);
+            }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+        public SteamDepotFile[] GetFiles(SteamDepotFileTypes fileTypes, CultureInfo culture)
+        {
+            if (fileTypes == SteamDepotFileTypes.None)
+                return null;
+
+            List<SteamDepotFile> result = new List<SteamDepotFile>();
+
+            foreach (List<SteamDepotFile> filesList in files.Values)
+            {
+                SteamDepotFile resultFile = null;
+                Int32 fileIndex = -1;
+                Int32 fileVersion = -1;
+                SteamDepotFile file;
+                SteamDepot depot;
+
+                // Find index of file (file should not be fix)
+                for (Int32 i = 0; i < filesList.Count; i++)
+                {
+                    file = filesList[i];
+                    depot = file.SteamDepot;
+
+                    if (!depot.IsOptional || depot.IsHaveCulture(culture) || depot.IsInvariant)
+                    {
+                        if (file.FileType != SteamDepotFileTypes.Fix)
+                            fileIndex = i;
+                    }
+                }
+
+                // Finded not fix file
+                if (fileIndex != -1)
+                {
+                    for (Int32 i = fileIndex; i < filesList.Count; i++)
+                    {
+                        file = filesList[i];
+                        depot = file.SteamDepot;
+
+                        if (!depot.IsOptional || depot.IsHaveCulture(culture) || depot.IsInvariant)
+                        {
+                            if (file.FileType != SteamDepotFileTypes.Fix && file.Version > fileVersion)
+                                fileVersion = file.Version;
+
+                            if ((file.FileType & fileTypes) > 0 && file.Version == fileVersion)
+                            {
+                                resultFile = file;
+                                // Add not fix file to result list if result file is fix and method should return not only fix files
+                                if (resultFile.FileType == SteamDepotFileTypes.Fix && fileTypes != SteamDepotFileTypes.Fix)
+                                    result.Add(filesList[fileIndex]);
+                            }
+                        }
+                    }
+                }
+                else // Finded fix file which do not replace any common or update file
+                {
+                    for (Int32 i = 0; i < filesList.Count; i++)
+                    {
+                        file = filesList[i];
+                        depot = file.SteamDepot;
+
+                        if (!depot.IsOptional || depot.IsHaveCulture(culture) || depot.IsInvariant)
+                        {
+                            if ((file.FileType & fileTypes) > 0 && file.Version == depot.GetLatestVersion(SteamDepotFileTypes.Common)) // TODO: file.Version == depot latest version include update files
+                                resultFile = file;
+                        }
+                    }
+                }
+
+                if (resultFile != null)
+                    result.Add(resultFile);
+            }
+
+            if (result.Count > 0)
+                return result.ToArray();
+            else
+                return null;
+        }
+    }
+
+    public class SteamDepotFile
+    {
+        String name;
+        Int32 version;
+        SteamDepotFileTypes type;
+        SteamDepot depot;
+
+        public SteamDepotFile(String fileFullName, Int32 fileVersion, SteamDepotFileTypes fileType, SteamDepot steamDepot)
+        {
+            name = fileFullName;
+            version = fileVersion;
+            type = fileType;
+            depot = steamDepot;
+        }
+
+        public String FullName
+        {
+            get { return name; }
+            set { name = value; }
+        }
+
+        public String RelativeName
+        {
+            get
+            {
+                String relativeName = name.Remove(0, depot.GetDirectory(version, type).FullName.Length);
+
+                if (relativeName[0] == Path.DirectorySeparatorChar)
+                    relativeName = relativeName.Remove(0, 1);
+
+                return relativeName;
+            }
+        }
+
+        public Int32 Version
+        {
+            get { return version; }
+            set { version = value; }
+        }
+
+        public SteamDepotFileTypes FileType
+        {
+            get { return type; }
+            set { type = value; }
+        }
+
+        public SteamDepot SteamDepot
+        {
+            get { return depot; }
+            set { depot = value; }
+        }
+
+        public override string ToString()
+        {
+            return name;
+        }
+    }
+
+    [Flags]
+    public enum SteamDepotFileTypes
+    {
+        None = 0,
+        Common = 0x1,
+        Fix = 0x2,
+        Update = 0x4,
+        Any = Common | Fix | Update
+    }
+
+    public static class SgiUtils
+    {
+        #region Methods for working with files.
+
+        public static Int64 CopyFile(SteamDepotFile file, String destinationFileFullName, Int64 filesSize, Int64 copiedFilesSize, BackgroundWorker worker)
+        {
+            if (file == null)
+                throw new ArgumentNullException("file");
+            if (String.IsNullOrEmpty(destinationFileFullName))
+                throw new ArgumentNullException("destinationFileFullName");
+
+            if (worker != null && worker.CancellationPending)
+                return 0L;
+
+            FileInfo sourceFile = new FileInfo(file.FullName);
+            Byte[] buffer = new Byte[1024 * 1024 * 16]; // 16 MB buffer
+            FileInfo destFile = new FileInfo(destinationFileFullName);
+            FileStream source;
+            FileStream destination;
+            Int64 offset = 0;
+            Int32 blockSize;
+            Int32 progressPercent = 0;
+
+            // Create directory for destination file if not exist
+            if (!destFile.Directory.Exists)
+            {
+                destFile.Directory.Create();
+                destFile.Directory.Attributes = sourceFile.Directory.Attributes;
+                destFile.Directory.CreationTimeUtc = sourceFile.Directory.CreationTimeUtc;
+            }
+
+            // If destination file allready exists
+            if (destFile.Exists)
+            {
+                if (file.FileType == SteamDepotFileTypes.Fix)
+                {
+                    FileInfo originalFile = new FileInfo(destinationFileFullName + ".original");
+
+                    if (originalFile.Exists)
+                    {
+                        if (originalFile.IsReadOnly)
+                            originalFile.IsReadOnly = false;
+                        originalFile.Delete();
+                    }
+
+                    File.Move(destinationFileFullName, originalFile.FullName);
+                }
+                else if (destFile.IsReadOnly)
+                    destFile.IsReadOnly = false;
+            }
+
+            source = sourceFile.OpenRead();
+            destination = destFile.Create();
+
+            if (filesSize > 0)
+                progressPercent = (Int32)((float)copiedFilesSize / filesSize * 100);
+
+            while (offset < sourceFile.Length)
+            {
+                if (worker != null && worker.CancellationPending)
+                    break;
+
+                if (offset + buffer.Length <= sourceFile.Length)
+                    blockSize = buffer.Length;
+                else
+                    blockSize = (Int32)(sourceFile.Length - offset);
+
+                source.Read(buffer, 0, blockSize);
+
+                destination.Write(buffer, 0, blockSize);
+
+                offset += blockSize;
+                copiedFilesSize += blockSize;
+
+                // Avoid spaming parent thread with report messages
+                if (worker != null && filesSize > 0 && (Int32)((float)copiedFilesSize / filesSize * 100) > progressPercent)
+                {
+                    progressPercent = (Int32)((float)copiedFilesSize / filesSize * 100);
+                    worker.ReportProgress(progressPercent);
+                }
+            }
+
+            source.Close();
+            destination.Close();
+
+            destFile.Attributes = sourceFile.Attributes;
+            destFile.CreationTimeUtc = sourceFile.CreationTimeUtc;
+            destFile.LastAccessTimeUtc = sourceFile.LastAccessTimeUtc;
+            destFile.LastWriteTimeUtc = sourceFile.LastWriteTimeUtc;
+
+            return offset;
+        }
+
+        #endregion Methods for working with files.
+
+        #region Methods for working with directories.
 
         // .NET 4.0 implementation of System.Environment.GetFolderPath method
         public static String GetFolderPath(SgiSpecialFolder folder)
@@ -1055,12 +1427,30 @@ namespace SteamGamesInstaller
 
                     String destFileName = Path.Combine(destDirectory.FullName, file.Name);
 
-                    if (isBackup && File.Exists(destFileName))
+                    if (File.Exists(destFileName))
                     {
-                        String newDestFileName = destFileName + ".original";
+                        if (isBackup)
+                        {
+                            FileInfo originalFile = new FileInfo(destFileName + ".original");
 
-                        File.Delete(newDestFileName);
-                        File.Move(destFileName, newDestFileName);
+                            if (originalFile.Exists)
+                            {
+                                if (originalFile.IsReadOnly)
+                                    originalFile.IsReadOnly = false;
+                                originalFile.Delete();
+                            }
+
+                            File.Move(destFileName, originalFile.FullName);
+                        }
+                        else
+                        {
+                            FileInfo destFile = new FileInfo(destFileName);
+
+                            if (destFile.IsReadOnly)
+                                destFile.IsReadOnly = false;
+
+                            destFile.Delete();
+                        }
                     }
 
                     file.CopyTo(destFileName, true);
@@ -1077,7 +1467,7 @@ namespace SteamGamesInstaller
 
         #endregion Methods for working with directories.
 
-        #region Methods for working strings.
+        #region Methods for working with strings.
 
         public static String Unescape(String input)
         {
@@ -1098,7 +1488,7 @@ namespace SteamGamesInstaller
                 {
                     if (i + 1 < input.Length)
                     {
-                        #region switch (input[i + 1])
+                        #region switch
                         switch (input[i + 1])
                         {
                             case '\a':
@@ -1146,7 +1536,7 @@ namespace SteamGamesInstaller
                                 i++;
                                 break;
                         }
-                        #endregion switch (input[i + 1])
+                        #endregion switch
                     }
                 }
 
@@ -1156,9 +1546,9 @@ namespace SteamGamesInstaller
             return new String(buffer, 0, bufferIndex);
         }
 
-        #endregion Methods for working strings.
+        #endregion Methods for working with strings.
 
-        #region Methods for working registry.
+        #region Methods for working with registry.
 
         // NOTE for future implementations of registry methods: for .NET 4.0 use Microsoft.Win32.RegistryKey.OpenBaseKey method
 
@@ -1354,7 +1744,6 @@ namespace SteamGamesInstaller
             Int32 options, Int32 desired, IntPtr securityAttributes, out Int32 result, out RegistryResultDisposition disposition);
     }
 
-    // The developer must take responsibility for assuring that the transition into unmanaged code is sufficiently protected by other means!
     [SuppressUnmanagedCodeSecurity]
     internal static class SafeNativeMethods
     {
@@ -1525,9 +1914,9 @@ namespace SteamGamesInstaller
         private List<VdfCstNode> cst; // concrete syntax tree
         private VdfAstNode ast; // abstract syntax tree
 
-        public ValveDataFile(FileInfo file)
+        public ValveDataFile(String fileName)
         {
-            valveDataFile = file;
+            valveDataFile = new FileInfo(fileName);
             cst = new List<VdfCstNode>();
             ast = null;
         }
@@ -1560,7 +1949,7 @@ namespace SteamGamesInstaller
             set { installDir = value; }
         }
 
-        public String GameLanguage
+        public String ApplicationLanguage
         {
             get { return gameLanguage; }
             set { gameLanguage = value; }

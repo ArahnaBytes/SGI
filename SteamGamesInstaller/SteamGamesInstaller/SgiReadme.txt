@@ -19,7 +19,7 @@ Typical example: some game has three ncf files stored in "C:\Program Files (x86)
 should be placed in "game content" or "game content.v17" directory ("game content.v17" means that "game content.ncf" file have
 17 version in this example; such form of versioning is strongly recommended). You can use steamCooker's CF Toolbox (recommended)
 for downloading game files for single ncf or gcf file to specified directory, validating game files and creating updates in gcf
-form; or use syahmixp's GCF WinRAR Plugin (plugin have high probability to corrupt extracted files, so test extracted files!);
+format; or use syahmixp's GCF WinRAR Plugin (plugin have high probability to corrupt extracted files, so test extracted files!);
 or use Nemesis's GCFScape (this program do not check control sums, so it useless for validating game files). After extracting
 all game files you should have in this example three directory, each of them will contain one ncf file and "common\game_name"
 directory with game files related only to this ncf file). SGI should be placed in directory which contains these three
@@ -51,15 +51,20 @@ to divide files on localizable part which contains files translated to one of la
 files independent from language. In some cases localizable files for diffrent languages have same names, so it is impossible
 to save such files in the same directory.
 
-KNOWN BUGS:
-- bug since v1.0.4358.1416: if install two or more fix directories and some files in such directories have same names then
-renamed original file in installation directory will be replaced with file from penultimate fix directory. Will be fixed when
-SGI will support files maps (lists of key-values where key is file name in installation firectory and value is file name in
-source directory).
-
 CHANGELOG:
 
 1.0.*
+- Fixed bug since v1.0.4358.1416: if install two or more fix directories and some files in such directories have same names then
+renamed original file in installation directory will be replaced with file from penultimate fix directory.
+- User now have option to do these actions in any combinations: install application, install fixes, execute installation script.
+- Front end now call methods from back end through interface ISgiManager.
+- Implemented files maps model (dictionaries of key-values where key is relative path to file in installation directory and
+value is file in depot).
+- SGI now use terminology used in https://partner.steamgames.com/documentation/running_on_steam and
+http://udn.epicgames.com/Three/Steam.html pages.
+- Depots now have separate version\directory dictionaries for common and fixes directories.
+
+v1.0.4359.10862 "White Stone" Thursday, 08 December 2011:
 - Fixed possible bug if in valve data file token have value with \" string.
 - Added support of multicultural components.
 - You can assign to GameInstallMethod delegates all game install methods which now have matching signature.

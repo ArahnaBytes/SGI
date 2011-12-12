@@ -118,70 +118,70 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="steamGameLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="steamApplicationLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="steamGameLabel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="steamApplicationLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 15</value>
   </data>
-  <data name="steamGameLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 13</value>
+  <data name="steamApplicationLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 13</value>
   </data>
-  <data name="steamGameLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="steamApplicationLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="steamGameLabel.Text" xml:space="preserve">
-    <value>Steam game:</value>
+  <data name="steamApplicationLabel.Text" xml:space="preserve">
+    <value>Steam application:</value>
   </data>
-  <data name="&gt;&gt;steamGameLabel.Name" xml:space="preserve">
-    <value>steamGameLabel</value>
+  <data name="&gt;&gt;steamApplicationLabel.Name" xml:space="preserve">
+    <value>steamApplicationLabel</value>
   </data>
-  <data name="&gt;&gt;steamGameLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;steamGameLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationLabel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;steamGameLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationLabel.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="steamGameComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="steamApplicationsComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="steamGameComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>87, 12</value>
+  <data name="steamApplicationsComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>112, 12</value>
   </data>
-  <data name="steamGameComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>414, 21</value>
+  <data name="steamApplicationsComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>389, 21</value>
   </data>
-  <data name="steamGameComboBox.TabIndex" type="System.Int32, mscorlib">
+  <data name="steamApplicationsComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;steamGameComboBox.Name" xml:space="preserve">
-    <value>steamGameComboBox</value>
+  <data name="&gt;&gt;steamApplicationsComboBox.Name" xml:space="preserve">
+    <value>steamApplicationsComboBox</value>
   </data>
-  <data name="&gt;&gt;steamGameComboBox.Type" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationsComboBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;steamGameComboBox.Parent" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationsComboBox.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;steamGameComboBox.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;steamApplicationsComboBox.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="useSteamRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="useSteamRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
+    <value>6, 65</value>
   </data>
   <data name="useSteamRadioButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 17</value>
   </data>
   <data name="useSteamRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="useSteamRadioButton.Text" xml:space="preserve">
     <value>I will use Steam</value>
@@ -196,19 +196,19 @@
     <value>optionsGroupBox</value>
   </data>
   <data name="&gt;&gt;useSteamRadioButton.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="notUseSteamRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="notUseSteamRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
+    <value>6, 88</value>
   </data>
   <data name="notUseSteamRadioButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 17</value>
   </data>
   <data name="notUseSteamRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="notUseSteamRadioButton.Text" xml:space="preserve">
     <value>I will NOT use Steam</value>
@@ -223,211 +223,238 @@
     <value>optionsGroupBox</value>
   </data>
   <data name="&gt;&gt;notUseSteamRadioButton.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
-  <data name="installScriptCheckBox.AutoSize" type="System.Boolean, mscorlib">
+  <data name="executeInstallScriptCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="installScriptCheckBox.Enabled" type="System.Boolean, mscorlib">
+  <data name="executeInstallScriptCheckBox.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="installScriptCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 65</value>
+  <data name="executeInstallScriptCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 111</value>
   </data>
-  <data name="installScriptCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 17</value>
+  <data name="executeInstallScriptCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 17</value>
   </data>
-  <data name="installScriptCheckBox.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="executeInstallScriptCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
-  <data name="installScriptCheckBox.Text" xml:space="preserve">
-    <value>Execute installscript.vdf</value>
+  <data name="executeInstallScriptCheckBox.Text" xml:space="preserve">
+    <value>Execute installation script</value>
   </data>
-  <data name="&gt;&gt;installScriptCheckBox.Name" xml:space="preserve">
-    <value>installScriptCheckBox</value>
+  <data name="&gt;&gt;executeInstallScriptCheckBox.Name" xml:space="preserve">
+    <value>executeInstallScriptCheckBox</value>
   </data>
-  <data name="&gt;&gt;installScriptCheckBox.Type" xml:space="preserve">
+  <data name="&gt;&gt;executeInstallScriptCheckBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;installScriptCheckBox.Parent" xml:space="preserve">
+  <data name="&gt;&gt;executeInstallScriptCheckBox.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;installScriptCheckBox.ZOrder" xml:space="preserve">
-    <value>7</value>
+  <data name="&gt;&gt;executeInstallScriptCheckBox.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="fixCheckBox.AutoSize" type="System.Boolean, mscorlib">
+  <data name="installFixesCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="fixCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 88</value>
+  <data name="installFixesCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 42</value>
   </data>
-  <data name="fixCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="installFixesCheckBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 17</value>
   </data>
-  <data name="fixCheckBox.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="installFixesCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="fixCheckBox.Text" xml:space="preserve">
+  <data name="installFixesCheckBox.Text" xml:space="preserve">
     <value>Install fixes</value>
   </data>
-  <data name="&gt;&gt;fixCheckBox.Name" xml:space="preserve">
-    <value>fixCheckBox</value>
+  <data name="&gt;&gt;installFixesCheckBox.Name" xml:space="preserve">
+    <value>installFixesCheckBox</value>
   </data>
-  <data name="&gt;&gt;fixCheckBox.Type" xml:space="preserve">
+  <data name="&gt;&gt;installFixesCheckBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;fixCheckBox.Parent" xml:space="preserve">
+  <data name="&gt;&gt;installFixesCheckBox.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;fixCheckBox.ZOrder" xml:space="preserve">
-    <value>8</value>
+  <data name="&gt;&gt;installFixesCheckBox.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="optionsGroupBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="gameSizeInMbLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="installApplicationCheckBox.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="gameSizeInMbLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>89, 134</value>
+  <data name="installApplicationCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
   </data>
-  <data name="gameSizeInMbLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
+  <data name="installApplicationCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 17</value>
   </data>
-  <data name="gameSizeInMbLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="gameSizeInMbLabel.Text" xml:space="preserve">
-    <value>0 MB</value>
-  </data>
-  <data name="&gt;&gt;gameSizeInMbLabel.Name" xml:space="preserve">
-    <value>gameSizeInMbLabel</value>
-  </data>
-  <data name="&gt;&gt;gameSizeInMbLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;gameSizeInMbLabel.Parent" xml:space="preserve">
-    <value>optionsGroupBox</value>
-  </data>
-  <data name="&gt;&gt;gameSizeInMbLabel.ZOrder" xml:space="preserve">
+  <data name="installApplicationCheckBox.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="gameSizeLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="installApplicationCheckBox.Text" xml:space="preserve">
+    <value>Install application</value>
   </data>
-  <data name="gameSizeLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 134</value>
+  <data name="&gt;&gt;installApplicationCheckBox.Name" xml:space="preserve">
+    <value>installApplicationCheckBox</value>
   </data>
-  <data name="gameSizeLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>59, 13</value>
+  <data name="&gt;&gt;installApplicationCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="gameSizeLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="gameSizeLabel.Text" xml:space="preserve">
-    <value>Game size:</value>
-  </data>
-  <data name="&gt;&gt;gameSizeLabel.Name" xml:space="preserve">
-    <value>gameSizeLabel</value>
-  </data>
-  <data name="&gt;&gt;gameSizeLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;gameSizeLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;installApplicationCheckBox.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;gameSizeLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;installApplicationCheckBox.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="languageLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="filesSizeInMbLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="languageLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 153</value>
+  <data name="filesSizeInMbLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>89, 157</value>
   </data>
-  <data name="languageLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
+  <data name="filesSizeInMbLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
   </data>
-  <data name="languageLabel.TabIndex" type="System.Int32, mscorlib">
+  <data name="filesSizeInMbLabel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="languageLabel.Text" xml:space="preserve">
-    <value>Language:</value>
+  <data name="filesSizeInMbLabel.Text" xml:space="preserve">
+    <value>0 MB</value>
   </data>
-  <data name="&gt;&gt;languageLabel.Name" xml:space="preserve">
-    <value>languageLabel</value>
+  <data name="&gt;&gt;filesSizeInMbLabel.Name" xml:space="preserve">
+    <value>filesSizeInMbLabel</value>
   </data>
-  <data name="&gt;&gt;languageLabel.Type" xml:space="preserve">
+  <data name="&gt;&gt;filesSizeInMbLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;languageLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;filesSizeInMbLabel.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;languageLabel.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;filesSizeInMbLabel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="filesSizeLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="filesSizeLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 157</value>
+  </data>
+  <data name="filesSizeLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="filesSizeLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="filesSizeLabel.Text" xml:space="preserve">
+    <value>Files size:</value>
+  </data>
+  <data name="&gt;&gt;filesSizeLabel.Name" xml:space="preserve">
+    <value>filesSizeLabel</value>
+  </data>
+  <data name="&gt;&gt;filesSizeLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;filesSizeLabel.Parent" xml:space="preserve">
+    <value>optionsGroupBox</value>
+  </data>
+  <data name="&gt;&gt;filesSizeLabel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="languageComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="applicationLanguageLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="languageComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 150</value>
+  <data name="applicationLanguageLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 176</value>
   </data>
-  <data name="languageComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>391, 21</value>
+  <data name="applicationLanguageLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
   </data>
-  <data name="languageComboBox.TabIndex" type="System.Int32, mscorlib">
+  <data name="applicationLanguageLabel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name="&gt;&gt;languageComboBox.Name" xml:space="preserve">
-    <value>languageComboBox</value>
+  <data name="applicationLanguageLabel.Text" xml:space="preserve">
+    <value>Language:</value>
   </data>
-  <data name="&gt;&gt;languageComboBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;applicationLanguageLabel.Name" xml:space="preserve">
+    <value>applicationLanguageLabel</value>
   </data>
-  <data name="&gt;&gt;languageComboBox.Parent" xml:space="preserve">
+  <data name="&gt;&gt;applicationLanguageLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;applicationLanguageLabel.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;languageComboBox.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;applicationLanguageLabel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="browseButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
+  <data name="applicationLanguageComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
-  <data name="browseButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>489, 109</value>
+  <data name="applicationLanguageComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>92, 173</value>
   </data>
-  <data name="browseButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="applicationLanguageComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>391, 21</value>
   </data>
-  <data name="browseButton.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="applicationLanguageComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
   </data>
-  <data name="browseButton.Text" xml:space="preserve">
-    <value>Browse...</value>
+  <data name="&gt;&gt;applicationLanguageComboBox.Name" xml:space="preserve">
+    <value>applicationLanguageComboBox</value>
   </data>
-  <data name="&gt;&gt;browseButton.Name" xml:space="preserve">
-    <value>browseButton</value>
+  <data name="&gt;&gt;applicationLanguageComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;browseButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;browseButton.Parent" xml:space="preserve">
+  <data name="&gt;&gt;applicationLanguageComboBox.Parent" xml:space="preserve">
     <value>optionsGroupBox</value>
   </data>
-  <data name="&gt;&gt;browseButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;applicationLanguageComboBox.ZOrder" xml:space="preserve">
     <value>4</value>
+  </data>
+  <data name="browseInstallDirectoryButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="browseInstallDirectoryButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>489, 132</value>
+  </data>
+  <data name="browseInstallDirectoryButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="browseInstallDirectoryButton.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="browseInstallDirectoryButton.Text" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="&gt;&gt;browseInstallDirectoryButton.Name" xml:space="preserve">
+    <value>browseInstallDirectoryButton</value>
+  </data>
+  <data name="&gt;&gt;browseInstallDirectoryButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;browseInstallDirectoryButton.Parent" xml:space="preserve">
+    <value>optionsGroupBox</value>
+  </data>
+  <data name="&gt;&gt;browseInstallDirectoryButton.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="installDirectoryTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="installDirectoryTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>92, 111</value>
+    <value>92, 134</value>
   </data>
   <data name="installDirectoryTextBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>391, 20</value>
   </data>
   <data name="installDirectoryTextBox.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;installDirectoryTextBox.Name" xml:space="preserve">
     <value>installDirectoryTextBox</value>
@@ -439,19 +466,19 @@
     <value>optionsGroupBox</value>
   </data>
   <data name="&gt;&gt;installDirectoryTextBox.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="installDirectoryLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="installDirectoryLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 114</value>
+    <value>6, 137</value>
   </data>
   <data name="installDirectoryLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 13</value>
   </data>
   <data name="installDirectoryLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="installDirectoryLabel.Text" xml:space="preserve">
     <value>Install directory:</value>
@@ -466,13 +493,13 @@
     <value>optionsGroupBox</value>
   </data>
   <data name="&gt;&gt;installDirectoryLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="optionsGroupBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 39</value>
   </data>
   <data name="optionsGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 190</value>
+    <value>570, 213</value>
   </data>
   <data name="optionsGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -492,38 +519,38 @@
   <data name="&gt;&gt;optionsGroupBox.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="installButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="installApplicationButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="installButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>426, 235</value>
+  <data name="installApplicationButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>426, 258</value>
   </data>
-  <data name="installButton.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="installApplicationButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="installButton.TabIndex" type="System.Int32, mscorlib">
+  <data name="installApplicationButton.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="installButton.Text" xml:space="preserve">
+  <data name="installApplicationButton.Text" xml:space="preserve">
     <value>Install</value>
   </data>
-  <data name="&gt;&gt;installButton.Name" xml:space="preserve">
-    <value>installButton</value>
+  <data name="&gt;&gt;installApplicationButton.Name" xml:space="preserve">
+    <value>installApplicationButton</value>
   </data>
-  <data name="&gt;&gt;installButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;installApplicationButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;installButton.Parent" xml:space="preserve">
+  <data name="&gt;&gt;installApplicationButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;installButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;installApplicationButton.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="cancelButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="cancelButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>507, 235</value>
+    <value>507, 258</value>
   </data>
   <data name="cancelButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -546,38 +573,38 @@
   <data name="&gt;&gt;cancelButton.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="refreshButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="refreshApplicationsButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="refreshButton.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="refreshApplicationsButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>507, 10</value>
   </data>
-  <data name="refreshButton.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="refreshApplicationsButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="refreshButton.TabIndex" type="System.Int32, mscorlib">
+  <data name="refreshApplicationsButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="refreshButton.Text" xml:space="preserve">
+  <data name="refreshApplicationsButton.Text" xml:space="preserve">
     <value>Refresh</value>
   </data>
-  <data name="&gt;&gt;refreshButton.Name" xml:space="preserve">
-    <value>refreshButton</value>
+  <data name="&gt;&gt;refreshApplicationsButton.Name" xml:space="preserve">
+    <value>refreshApplicationsButton</value>
   </data>
-  <data name="&gt;&gt;refreshButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;refreshApplicationsButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;refreshButton.Parent" xml:space="preserve">
+  <data name="&gt;&gt;refreshApplicationsButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;refreshButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;refreshApplicationsButton.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <data name="statusStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 270</value>
+    <value>0, 291</value>
   </data>
   <data name="statusStrip.Size" type="System.Drawing.Size, System.Drawing">
     <value>594, 22</value>
@@ -613,7 +640,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>594, 292</value>
+    <value>594, 313</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>415, 300</value>

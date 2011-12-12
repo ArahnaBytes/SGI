@@ -1,11 +1,10 @@
 ﻿// This file is subject of copyright notice which described in SgiLicense.txt file.
 // Initial contributors of this source code (SgiForm.cs): Mesenion (ArahnaBytes). Other contributors should be mentioned in comments.
 
-#define JIT
-
 using System;
 using System.CodeDom.Compiler;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -17,18 +16,27 @@ using SteamGamesInstaller.Properties;
 
 namespace SteamGamesInstaller
 {
+#if JIT
+    public interface ISgiManager
+    {
+        String[] GetInstallableApplications();
+        String[] GetInstallableLanguages(String appName);
+        Int64 GetFilesSize(Object installOptions);
+        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
+        void InstallApplication(Object installOptions, BackgroundWorker worker);
+    }
+#endif
+
     public partial class SgiForm : Form
     {
 #if JIT
-        private Object manager;
         private Assembly managerAssembly;
-#else
-        private SgiManager manager;
 #endif
-        Int64 gameSize;
-        Int64 freeSpace;
-        Boolean isInstalling;
-        BackgroundWorker worker;
+        private ISgiManager manager;
+        private Int64 appSize;
+        private Int64 freeSpace;
+        private Boolean isInstalling;
+        private BackgroundWorker worker;
 
         [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
         public SgiForm()
@@ -41,22 +49,15 @@ namespace SteamGamesInstaller
 
             installDirectoryTextBox.Text = GetSteamAppsDirectory();
             CreateManager();
-
-            if (manager == null)
-                this.Close();
         }
 
-        private void steamGameComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void steamApplicationsComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            languageComboBox.Items.Clear();
-#if JIT
-            languageComboBox.Items.AddRange((String[])manager.GetType().GetMethod("GetInstallableLanguages").Invoke(manager,
-                new Object[] { steamGameComboBox.Text }));
-#else
-            languageComboBox.Items.AddRange(manager.GetInstallableLanguages(steamGameComboBox.Text));
-#endif
-            if (languageComboBox.Items.Count > 0)
-                languageComboBox.SelectedIndex = 0;
+            applicationLanguageComboBox.Items.Clear();
+            applicationLanguageComboBox.Items.AddRange(manager.GetInstallableLanguages(steamApplicationsComboBox.Text));
+
+            if (applicationLanguageComboBox.Items.Count > 0)
+                applicationLanguageComboBox.SelectedIndex = 0;
         }
 
         private void refreshButton_Click(object sender, EventArgs e)
@@ -64,9 +65,20 @@ namespace SteamGamesInstaller
             CreateManager();
         }
 
+        private void installApplicationCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowApplicationSize(true);
+        }
+
+        private void installFixesCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowApplicationSize(true);
+        }
+
         private void RadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            installScriptCheckBox.Enabled = notUseSteamRadioButton.Checked;
+            executeInstallScriptCheckBox.Enabled = notUseSteamRadioButton.Checked;
+            executeInstallScriptCheckBox.Checked = executeInstallScriptCheckBox.Enabled;
         }
 
         private void browseButton_Click(object sender, EventArgs e)
@@ -78,28 +90,14 @@ namespace SteamGamesInstaller
                 if (result == DialogResult.OK)
                 {
                     installDirectoryTextBox.Text = fbd.SelectedPath;
-                    ShowGameSize();
-                    SetInstallButtonState();
+                    ShowApplicationSize(false);
                 }
             }
         }
 
         private void languageComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-#if JIT
-                Object options = managerAssembly.CreateInstance("SteamGamesInstaller.InstallOptions", false, BindingFlags.CreateInstance, null,
-                    new Object[] { steamGameComboBox.Text, useSteamRadioButton.Checked, installScriptCheckBox.Checked, fixCheckBox.Checked,
-                    installDirectoryTextBox.Text, languageComboBox.Text }, CultureInfo.InvariantCulture, null);
-
-            gameSize = (Int64)manager.GetType().GetMethod("GetGameSize").Invoke(manager, new Object[] { options });
-#else
-            InstallOptions options = new InstallOptions(steamGameComboBox.Text, useSteamRadioButton.Checked, installScriptCheckBox.Checked,
-                    fixCheckBox.Checked, installDirectoryTextBox.Text, languageComboBox.Text);
-
-            gameSize = manager.GetGameSize(options);
-#endif
-            ShowGameSize();
-            SetInstallButtonState();
+            ShowApplicationSize(true);
         }
 
         private void installButton_Click(object sender, EventArgs e)
@@ -115,7 +113,7 @@ namespace SteamGamesInstaller
 
                 worker = new BackgroundWorker();
 
-                worker.DoWork += new DoWorkEventHandler(InstallGame);
+                worker.DoWork += new DoWorkEventHandler(InstallApplication);
                 worker.ProgressChanged += new ProgressChangedEventHandler(worker_ProgressChanged);
                 worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(worker_RunWorkerCompleted);
                 worker.WorkerReportsProgress = true;
@@ -123,36 +121,40 @@ namespace SteamGamesInstaller
 
 #if JIT
                 Object options = managerAssembly.CreateInstance("SteamGamesInstaller.InstallOptions", false, BindingFlags.CreateInstance, null,
-                    new Object[] { steamGameComboBox.Text, useSteamRadioButton.Checked, installScriptCheckBox.Checked, fixCheckBox.Checked,
-                    installDirectoryTextBox.Text, languageComboBox.Text }, CultureInfo.InvariantCulture, null);
+                    new Object[] { steamApplicationsComboBox.Text, installDirectoryTextBox.Text, applicationLanguageComboBox.Text,
+                    executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked }, CultureInfo.InvariantCulture, null);
 #else
-                InstallOptions options = new InstallOptions(steamGameComboBox.Text, useSteamRadioButton.Checked, installScriptCheckBox.Checked,
-                    fixCheckBox.Checked, installDirectoryTextBox.Text, languageComboBox.Text);
+                Object options = new InstallOptions(steamApplicationsComboBox.Text, installDirectoryTextBox.Text, applicationLanguageComboBox.Text,
+                executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked);
 #endif
 
                 worker.RunWorkerAsync(options);
             }
         }
 
-        void InstallGame(object sender, DoWorkEventArgs e)
+        private void cancelButton_Click(object sender, EventArgs e)
         {
-#if JIT
-            manager.GetType().GetMethod("InstallGame").Invoke(manager, new Object[] { e.Argument, worker });
-#else
-            manager.InstallGame((InstallOptions)e.Argument, worker);
-#endif
+            if (!isInstalling)
+                Application.Exit();
+            else
+                worker.CancelAsync();
+        }
+
+        private void InstallApplication(object sender, DoWorkEventArgs e)
+        {
+            manager.InstallApplication(e.Argument, worker);
 
             if (worker.CancellationPending)
                 e.Cancel = true;
         }
 
-        void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             toolStripProgressBar.Value = e.ProgressPercentage;
             toolStripStatusLabel.Text = String.Format(CultureInfo.CurrentUICulture, Resources.InstallProgressMessage, e.ProgressPercentage);
         }
 
-        void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Cancelled)
             {
@@ -185,14 +187,6 @@ namespace SteamGamesInstaller
             worker.Dispose();
         }
 
-        private void cancelButton_Click(object sender, EventArgs e)
-        {
-            if (!isInstalling)
-                Application.Exit();
-            else
-                worker.CancelAsync();
-        }
-
         private static String GetSteamAppsDirectory()
         {
             String steamPath = (String)Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam").GetValue("SteamPath");
@@ -210,13 +204,14 @@ namespace SteamGamesInstaller
 #if JIT
             CompilerResults results = null;
             CompilerParameters parameters = new CompilerParameters(new String[] { "System.dll", "System.Core.dll" });
+            String assemblyDirectoryName = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
             parameters.GenerateInMemory = true;
-            parameters.TempFiles = new TempFileCollection(Environment.CurrentDirectory, false);
+            parameters.TempFiles = new TempFileCollection(assemblyDirectoryName, false);
 
             using (CodeDomProvider provider = CodeDomProvider.CreateProvider("CSharp"))
             {
-                results = provider.CompileAssemblyFromSource(parameters, File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "SgiManager.cs")));
+                results = provider.CompileAssemblyFromSource(parameters, File.ReadAllText(Path.Combine(assemblyDirectoryName, "SgiManager.cs")));
             }
 
             if (results != null && results.Errors.Count > 0)
@@ -236,68 +231,85 @@ namespace SteamGamesInstaller
             }
 
             managerAssembly = results.CompiledAssembly;
-            manager = managerAssembly.CreateInstance("SteamGamesInstaller.SgiManager");
+            manager = new SgiManagerWrapper(managerAssembly.CreateInstance("SteamGamesInstaller.SgiManager"));
 #else
             manager = new SgiManager();
 #endif
 
-            ShowFindedGames();
-            SetControlsState(true);
+            if (manager == null)
+                this.Close();
+            else
+            {
+                ShowFindedApps();
+                SetControlsState(true);
+            }
         }
 
-        private void ShowFindedGames()
+        private void ShowFindedApps()
         {
-#if JIT
-            String[] findedGames = (String[])manager.GetType().GetMethod("GetInstallableGames").Invoke(manager, null);
-#else
-            String[] findedGames = manager.GetInstallableGames();
-#endif
+            String[] findedApps = manager.GetInstallableApplications();
 
-            if (findedGames != null)
+            if (findedApps != null)
             {
-                steamGameComboBox.Items.Clear();
-                steamGameComboBox.Items.AddRange(findedGames);
-                if (steamGameComboBox.Items.Count > 0)
-                    steamGameComboBox.SelectedIndex = 0;
+                steamApplicationsComboBox.Items.Clear();
+                steamApplicationsComboBox.Items.AddRange(findedApps);
+                if (steamApplicationsComboBox.Items.Count > 0)
+                    steamApplicationsComboBox.SelectedIndex = 0;
             }
         }
 
         private void SetControlsState(Boolean isEnabled)
         {
-            steamGameComboBox.Enabled = isEnabled;
-            refreshButton.Enabled = isEnabled;
+            steamApplicationsComboBox.Enabled = isEnabled;
+            refreshApplicationsButton.Enabled = isEnabled;
             optionsGroupBox.Enabled = isEnabled;
 
             if (!isEnabled)
-                installButton.Enabled = false;
+                installApplicationButton.Enabled = false;
         }
 
         private void SetInstallButtonState()
         {
-            if (!String.IsNullOrEmpty(installDirectoryTextBox.Text) && Directory.Exists(installDirectoryTextBox.Text) && gameSize != -1 && freeSpace > gameSize && !isInstalling)
-                installButton.Enabled = true;
+            if (!String.IsNullOrEmpty(installDirectoryTextBox.Text) && Directory.Exists(installDirectoryTextBox.Text) && appSize != -1 && freeSpace > appSize && !isInstalling)
+                installApplicationButton.Enabled = true;
             else
-                installButton.Enabled = false;
+                installApplicationButton.Enabled = false;
         }
 
-        private void ShowGameSize()
+        private void ShowApplicationSize(Boolean isRecalculate)
         {
-            if (!String.IsNullOrEmpty(installDirectoryTextBox.Text) && Directory.Exists(installDirectoryTextBox.Text) && gameSize != -1)
+            if (isRecalculate)
+            {
+#if JIT
+                Object options = managerAssembly.CreateInstance("SteamGamesInstaller.InstallOptions", false, BindingFlags.CreateInstance, null,
+                    new Object[] { steamApplicationsComboBox.Text, installDirectoryTextBox.Text, applicationLanguageComboBox.Text,
+                    executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked }, CultureInfo.InvariantCulture, null);
+#else
+                Object options = new InstallOptions(steamApplicationsComboBox.Text, installDirectoryTextBox.Text, applicationLanguageComboBox.Text,
+                    executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked);
+#endif
+
+                appSize = manager.GetFilesSize(options);
+            }
+
+            if (!String.IsNullOrEmpty(installDirectoryTextBox.Text) && Directory.Exists(installDirectoryTextBox.Text) && appSize != -1)
             {
                 DriveInfo drive = GetDrive(installDirectoryTextBox.Text);
 
-                gameSizeInMbLabel.ForeColor = SystemColors.ControlText;
-                gameSizeInMbLabel.Text = String.Format(CultureInfo.CurrentUICulture, Resources.GameSizeInMbMessage, gameSize / 1024 / 1024);
+                filesSizeInMbLabel.ForeColor = SystemColors.ControlText;
+                filesSizeInMbLabel.Text = String.Format(CultureInfo.CurrentUICulture, Resources.AppSizeInMbMessage, appSize / 1024 / 1024);
                 freeSpace = drive.AvailableFreeSpace;
 
-                if (freeSpace <= gameSize)
+                if (freeSpace <= appSize)
                 {
-                    gameSizeInMbLabel.ForeColor = Color.Red;
-                    gameSizeInMbLabel.Text += String.Format(CultureInfo.CurrentUICulture, Resources.FreeSpaceMessage, drive.Name, freeSpace / 1024 / 1024);
+                    filesSizeInMbLabel.ForeColor = Color.Red;
+                    filesSizeInMbLabel.Text += String.Format(CultureInfo.CurrentUICulture, Resources.FreeSpaceMessage, drive.Name, freeSpace / 1024 / 1024);
                 }
             }
             else
-                gameSizeInMbLabel.Text = String.Empty;
+                filesSizeInMbLabel.Text = String.Empty;
+
+            SetInstallButtonState();
         }
 
         private static DriveInfo GetDrive(String path)

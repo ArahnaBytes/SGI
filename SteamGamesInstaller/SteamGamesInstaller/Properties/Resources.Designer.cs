@@ -61,6 +61,15 @@ namespace SteamGamesInstaller.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} MB.
+        /// </summary>
+        internal static string AppSizeInMbMessage {
+            get {
+                return ResourceManager.GetString("AppSizeInMbMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Background thread stack trace:.
         /// </summary>
         internal static string BackgroundThreadStackTraceMessage {
@@ -102,15 +111,6 @@ namespace SteamGamesInstaller.Properties {
         internal static string FreeSpaceMessage {
             get {
                 return ResourceManager.GetString("FreeSpaceMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} MB.
-        /// </summary>
-        internal static string GameSizeInMbMessage {
-            get {
-                return ResourceManager.GetString("GameSizeInMbMessage", resourceCulture);
             }
         }
         

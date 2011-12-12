@@ -19,7 +19,6 @@
       (for example 'FileName' -> 'Filename').
     -->
     <Recognized>
-      <Word>installscript</Word>
       <Word>ncf</Word>
       <Word>sgi</Word>
       <Word>utils</Word>
@@ -48,7 +47,7 @@
         'Whitespace').
       -->
     <Compound>
-      <!--<Term CompoundAlternate="DataStore">datastore</Term>-->
+      <Term CompoundAlternate="InstallScript">installscript</Term>
     </Compound>
     <!--
         This is a list of case-insensitive exceptions to the CompoundWordsShouldBeCasedCorrectly 
