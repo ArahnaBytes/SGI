@@ -92,7 +92,7 @@ namespace SteamGamesInstaller
             executeInstallScriptCheckBox.Checked = executeInstallScriptCheckBox.Enabled;
         }
 
-        private void browseButton_Click(object sender, EventArgs e)
+        private void browseInstallDirectoryButton_Click(object sender, EventArgs e)
         {
             using (FolderBrowserDialog fbd = new FolderBrowserDialog())
             {

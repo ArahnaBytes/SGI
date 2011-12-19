@@ -135,6 +135,9 @@
   <data name="FreeSpaceMessage" xml:space="preserve">
     <value> (your {0} drive has only {1} MB of free disk space available)</value>
   </data>
+  <data name="InstallDirectoryNotExistsMessage" xml:space="preserve">
+    <value>Selected directory does not exist. Create it?</value>
+  </data>
   <data name="InstallProgressMessage" xml:space="preserve">
     <value>{0} %</value>
   </data>

@@ -36,6 +36,7 @@
             this.executeInstallScriptCheckBox = new System.Windows.Forms.CheckBox();
             this.installFixesCheckBox = new System.Windows.Forms.CheckBox();
             this.optionsGroupBox = new System.Windows.Forms.GroupBox();
+            this.installApplicationCheckBox = new System.Windows.Forms.CheckBox();
             this.filesSizeInMbLabel = new System.Windows.Forms.Label();
             this.filesSizeLabel = new System.Windows.Forms.Label();
             this.applicationLanguageLabel = new System.Windows.Forms.Label();
@@ -49,7 +50,6 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.installApplicationCheckBox = new System.Windows.Forms.CheckBox();
             this.optionsGroupBox.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -114,6 +114,15 @@
             this.optionsGroupBox.Name = "optionsGroupBox";
             this.optionsGroupBox.TabStop = false;
             // 
+            // installApplicationCheckBox
+            // 
+            resources.ApplyResources(this.installApplicationCheckBox, "installApplicationCheckBox");
+            this.installApplicationCheckBox.Checked = true;
+            this.installApplicationCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.installApplicationCheckBox.Name = "installApplicationCheckBox";
+            this.installApplicationCheckBox.UseVisualStyleBackColor = true;
+            this.installApplicationCheckBox.CheckedChanged += new System.EventHandler(this.installApplicationCheckBox_CheckedChanged);
+            // 
             // filesSizeInMbLabel
             // 
             resources.ApplyResources(this.filesSizeInMbLabel, "filesSizeInMbLabel");
@@ -143,7 +152,7 @@
             resources.ApplyResources(this.browseInstallDirectoryButton, "browseInstallDirectoryButton");
             this.browseInstallDirectoryButton.Name = "browseInstallDirectoryButton";
             this.browseInstallDirectoryButton.UseVisualStyleBackColor = true;
-            this.browseInstallDirectoryButton.Click += new System.EventHandler(this.browseButton_Click);
+            this.browseInstallDirectoryButton.Click += new System.EventHandler(this.browseInstallDirectoryButton_Click);
             // 
             // installDirectoryTextBox
             // 
@@ -197,15 +206,6 @@
             // 
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             resources.ApplyResources(this.toolStripStatusLabel, "toolStripStatusLabel");
-            // 
-            // installApplicationCheckBox
-            // 
-            resources.ApplyResources(this.installApplicationCheckBox, "installApplicationCheckBox");
-            this.installApplicationCheckBox.Checked = true;
-            this.installApplicationCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.installApplicationCheckBox.Name = "installApplicationCheckBox";
-            this.installApplicationCheckBox.UseVisualStyleBackColor = true;
-            this.installApplicationCheckBox.CheckedChanged += new System.EventHandler(this.installApplicationCheckBox_CheckedChanged);
             // 
             // SgiForm
             // 

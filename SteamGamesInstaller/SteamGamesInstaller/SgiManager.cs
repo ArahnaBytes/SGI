@@ -146,11 +146,9 @@ namespace SteamGamesInstaller
                 if (installOpts.IsUseInstallScript && !String.IsNullOrEmpty(app.InstallScriptName))
                 {
                     String installScriptName = Path.Combine(Path.Combine(installOpts.InstallPath, app.InstallDirectoryName), app.InstallScriptName);
-                    ValveDataFile vdf = new ValveDataFile(installScriptName);
-
-                    vdf.InstallDirectory = new DirectoryInfo(Path.Combine(installOpts.InstallPath, app.InstallDirectoryName));
-                    vdf.ApplicationLanguage = installOpts.ApplicationCulture.EnglishName;
-                    vdf.BackgroundWorker = worker;
+                    ValveDataFile vdf = new ValveDataFile(app, installScriptName,
+                        new DirectoryInfo(Path.Combine(installOpts.InstallPath, app.InstallDirectoryName)),
+                        installOpts.ApplicationCulture.EnglishName, worker);
 
                     vdf.ExecuteScript();
                 }
@@ -185,10 +183,38 @@ namespace SteamGamesInstaller
 
         /// <summary>
         /// Populates applications list with information about Steam applications and their depots.
+        /// Also finds depots for added applications.
         /// </summary>
         private void PopulateApplicationsList()
         {
-            // The Elder Scrolls V: Skyrim
+            #region DEFCON
+            apps.Add(new SteamApplication(1520, @"DEFCON", @"Defcon", null,
+                CheckDepots, GetFilesSize, InstallApplication));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(1521, @"Defcon Content", @"Defcon Content", false,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
+                CultureInfo.GetCultureInfo("it"), CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
+            #endregion DEFCON
+
+            #region X3: Terran Conflict
+            apps.Add(new SteamApplication(2820, @"X3: Terran Conflict", @"X3 Terran Conflict", "installscript.vdf",
+                CheckDepots, GetFilesSize, InstallApplication));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2821, @"X3: Terran Conflict content", @"X3 Terran Conflict content", false,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2822, @"X3: Terran Conflict German", @"X3 Terran Conflict German", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2823, @"X3: Terran Conflict French", @"X3 Terran Conflict French", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2824, @"X3: Terran Conflict Italian", @"X3 Terran Conflict Italian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2825, @"X3: Terran Conflict English", @"X3 Terran Conflict English", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2826, @"X3 Soundtrack", @"X3 Soundtrack", true,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2827, @"X3: A Sunny Place", @"x3tc DLC", true,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            #endregion X3: Terran Conflict
+
+            #region The Elder Scrolls V: Skyrim
             apps.Add(new SteamApplication(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", "installscript.vdf",
                 CheckDepots_72850, GetFilesSize_72850, InstallApplication_72850));
             apps[apps.Count - 1].AddDepot(new SteamDepot(72851, @"Skyrim Content", @"Skyrim Content", false,
@@ -216,11 +242,29 @@ namespace SteamGamesInstaller
             // "Skyrim Czech" and "Skyrim Polish" depots use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
             // files from "Skyrim english" depot.
             apps[apps.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
+            #endregion The Elder Scrolls V: Skyrim
 
-            // Terraria
+            #region Terraria
             apps.Add(new SteamApplication(105600, @"Terraria", @"Terraria", "installscript.vdf",
                 CheckDepots, GetFilesSize, InstallApplication));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(105601, @"TerrariaRelease", @"TerrariaRelease", false, new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(105601, @"TerrariaRelease", @"TerrariaRelease", false,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            #endregion Terraria
+
+            #region X3: Albion Prelude
+            apps.Add(new SteamApplication(201310, @"X3: Albion Prelude", @"x3 terran conflict", "installscript-x3ap.vdf",
+                CheckDepots, GetFilesSize, InstallApplication));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201311, @"X3: Albion Prelude content", @"x3ap content", false,
+                new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201312, @"X3: Albion Prelude english", @"X3AP english", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201313, @"X3: Terran Conflict german", @"X3 Terran Conflict german", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201314, @"X3: Terran Conflict french", @"X3 Terran Conflict french", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201315, @"X3: Terran Conflict italian", @"X3 Terran Conflict italian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+            #endregion X3: Albion Prelude
 
             // Find depots for all applications
             foreach (SteamApplication app in this.apps)
@@ -1906,6 +1950,7 @@ namespace SteamGamesInstaller
 
     public class ValveDataFile
     {
+        private SteamApplication application;
         private FileInfo valveDataFile;
         private String[] script;
         private BackgroundWorker worker;
@@ -1914,9 +1959,14 @@ namespace SteamGamesInstaller
         private List<VdfCstNode> cst; // concrete syntax tree
         private VdfAstNode ast; // abstract syntax tree
 
-        public ValveDataFile(String fileName)
+        public ValveDataFile(SteamApplication app, String fileName, DirectoryInfo installDirectory, String language, BackgroundWorker worker)
         {
-            valveDataFile = new FileInfo(fileName);
+            this.application = app;
+            this.valveDataFile = new FileInfo(fileName);
+            this.installDir = installDirectory;
+            this.gameLanguage = language;
+            this.worker = worker;
+
             cst = new List<VdfCstNode>();
             ast = null;
         }
@@ -2292,7 +2342,7 @@ namespace SteamGamesInstaller
                     break;
 
                 VdfAstNode registryValueNode = node[i];
-                String registryKey = null;
+                String registryKey = @"HKEY_LOCAL_MACHINE\Software\Valve\Steam\Apps\" + application.Id.ToString();
                 String processImage = null;
                 String commandLine = null;
                 Boolean isNoCleanUp = true;

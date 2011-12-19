@@ -54,6 +54,11 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed bug: if install script does not have "HasRunKey" token in "Run Process" token tree, then default registry key will not
+created or checked and process will not runned.
+- Added to games list: DEFCON, X3: Terran Conflict and X3: Albion Prelude.
+
+v1.0.4363.41913 "White Stone" Monday, 12 December 2011:
 - Fixed crash if not exists HKEY_CURRENT_USER\Software\Valve\Steam\SteamPath registry key.
 
 v1.0.4363.13647 "White Stone" Monday, 12 December 2011:

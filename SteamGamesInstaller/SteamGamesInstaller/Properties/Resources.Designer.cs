@@ -115,6 +115,15 @@ namespace SteamGamesInstaller.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Selected directory does not exist. Create it?.
+        /// </summary>
+        internal static string InstallDirectoryNotExistsMessage {
+            get {
+                return ResourceManager.GetString("InstallDirectoryNotExistsMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} %.
         /// </summary>
         internal static string InstallProgressMessage {
