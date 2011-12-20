@@ -54,6 +54,10 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed typos in depots list for X3: Albion Prelude.
+- Added russian depots for X3: Terran Conflict and X3: Albion Prelude.
+
+v1.0.4370.26919 "White Stone" Monday, 19 December 2011:
 - Fixed bug: if install script does not have "HasRunKey" token in "Run Process" token tree, then default registry key will not
 created or checked and process will not runned.
 - Added to games list: DEFCON, X3: Terran Conflict and X3: Albion Prelude.

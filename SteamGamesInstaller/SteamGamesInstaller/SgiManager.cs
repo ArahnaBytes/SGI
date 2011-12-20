@@ -212,6 +212,8 @@ namespace SteamGamesInstaller
                 new CultureInfo[] { CultureInfo.InvariantCulture }));
             apps[apps.Count - 1].AddDepot(new SteamDepot(2827, @"X3: A Sunny Place", @"x3tc DLC", true,
                 new CultureInfo[] { CultureInfo.InvariantCulture }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(2828, @"X3: Terran Conflict Russian", @"X3TC Russian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
             #endregion X3: Terran Conflict
 
             #region The Elder Scrolls V: Skyrim
@@ -258,12 +260,14 @@ namespace SteamGamesInstaller
                 new CultureInfo[] { CultureInfo.InvariantCulture }));
             apps[apps.Count - 1].AddDepot(new SteamDepot(201312, @"X3: Albion Prelude english", @"X3AP english", true,
                 new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201313, @"X3: Terran Conflict german", @"X3 Terran Conflict german", true,
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201313, @"X3: Albion Prelude german", @"X3AP german", true,
                 new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201314, @"X3: Terran Conflict french", @"X3 Terran Conflict french", true,
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201314, @"X3: Albion Prelude french", @"X3AP french", true,
                 new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201315, @"X3: Terran Conflict italian", @"X3 Terran Conflict italian", true,
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201315, @"X3: Albion Prelude italian", @"X3AP italian", true,
                 new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+            apps[apps.Count - 1].AddDepot(new SteamDepot(201316, @"X3: Albion Prelude Russian", @"X3AP Russian", true,
+                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
             #endregion X3: Albion Prelude
 
             // Find depots for all applications
