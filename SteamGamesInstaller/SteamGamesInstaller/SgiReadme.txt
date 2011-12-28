@@ -25,6 +25,12 @@ all game files you should have in this example three directory, each of them wil
 directory with game files related only to this ncf file). SGI should be placed in directory which contains these three
 directories.
 
+USING SHARED FILES FEATURE:
+This feature allows share files of one depot to other depots.
+If some depots use the same files and such files logically belongs to one depot then better share such files and do not waste
+depot space. Good candidates for sharing are very big files which unlikely will changed in other depots. Bed candidates are
+binaries, config files, small files (several megabytes) etc.
+
 USING FIXES FEATURE:
 This feature allow to user replace or add files of installed game.
 If user selected install fixes and directory where placed SGI contains "_Fixes" directory and if "_Fixes" directory contains
@@ -54,6 +60,11 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed bug: if install script have language condition in registry node then keys will not saved in registry.
+- Implemented installation of shared files.
+- Added to games list: RAGE, Supreme Ruler: Cold War and Dead Island.
+
+v1.0.4371.28373 "White Stone" Tuesday, 20 December 2011:
 - Fixed typos in depots list for X3: Albion Prelude.
 - Added russian depots for X3: Terran Conflict and X3: Albion Prelude.
 

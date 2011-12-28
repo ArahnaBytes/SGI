@@ -12,13 +12,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security;
+using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Text;
 using Microsoft.Win32;
 
 namespace SteamGamesInstaller
 {
-    public delegate void CheckDepotsMethod(SteamApplication app, DirectoryInfo[] directories);
+    public delegate void CheckDepotsMethod(SteamApplication app);
     public delegate Int64 GetFilesSizeMethod(SteamApplication app, InstallOptions installOptions);
     public delegate Int64 InstallApplicationMethod(SteamApplication app, InstallOptions installOptions, Int64 appSize, BackgroundWorker worker);
 
@@ -60,7 +61,45 @@ namespace SteamGamesInstaller
             foreach (SteamApplication app in this.apps)
             {
                 if (app.CheckState == CheckState.Installable)
+                {
+                    #region uncomment this to view in console names of same files in application depots and code suggested for adding to applications list
+                    //SteamDepotFile[][] sameFilesArray = app.FilesMap.GetSameFiles(SteamDepotFileTypes.Common);
+
+                    //if (sameFilesArray.Length > 0)
+                    //{
+                    //    Console.WriteLine();
+                    //    Console.WriteLine("List of same files:");
+
+                    //    foreach (SteamDepotFile[] sameFiles in sameFilesArray)
+                    //    {
+                    //        foreach (SteamDepotFile depotFile in sameFiles)
+                    //            Console.WriteLine(depotFile.FullName);
+                    //    }
+
+                    //    Console.WriteLine();
+                    //    Console.WriteLine("Code suggested for adding to applications list:");
+
+                    //    foreach (SteamDepotFile[] sameFiles in sameFilesArray)
+                    //    {
+                    //        Console.WriteLine(@"SteamApplication.AddSharedFile(new SteamDepotSharedFile(@""{0}"", app.GetDepotByFileName(@""{1}""),",
+                    //            sameFiles[0].RelativeName, sameFiles[0].SteamDepot.FileName);
+                    //        Console.Write(@"    new SteamDepot[] { ");
+
+                    //        for (Int32 i = 1; i < sameFiles.Length; i++)
+                    //        {
+                    //            if (i > 1)
+                    //                Console.Write(@", ");
+
+                    //            Console.Write(@"app.GetDepotByFileName(@""{0}"")", sameFiles[i].SteamDepot.FileName);
+                    //        }
+
+                    //        Console.WriteLine(@" }));");
+                    //    }
+                    //}
+                    #endregion uncomment this to view in console names of same files in application depots and code suggested for adding to applications list
+
                     appNames.Add(app.Name);
+                }
             }
 
             if (appNames.Count > 0)
@@ -188,86 +227,225 @@ namespace SteamGamesInstaller
         private void PopulateApplicationsList()
         {
             #region DEFCON
-            apps.Add(new SteamApplication(1520, @"DEFCON", @"Defcon", null,
-                CheckDepots, GetFilesSize, InstallApplication));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(1521, @"Defcon Content", @"Defcon Content", false,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
-                CultureInfo.GetCultureInfo("it"), CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
+            {
+                SteamApplication app = new SteamApplication(1520, @"DEFCON", @"Defcon", null,
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(1521, @"Defcon Content", @"Defcon Content", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
+                    CultureInfo.GetCultureInfo("it"), CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
+
+                apps.Add(app);
+            }
             #endregion DEFCON
 
             #region X3: Terran Conflict
-            apps.Add(new SteamApplication(2820, @"X3: Terran Conflict", @"X3 Terran Conflict", "installscript.vdf",
-                CheckDepots, GetFilesSize, InstallApplication));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2821, @"X3: Terran Conflict content", @"X3 Terran Conflict content", false,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2822, @"X3: Terran Conflict German", @"X3 Terran Conflict German", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2823, @"X3: Terran Conflict French", @"X3 Terran Conflict French", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2824, @"X3: Terran Conflict Italian", @"X3 Terran Conflict Italian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2825, @"X3: Terran Conflict English", @"X3 Terran Conflict English", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2826, @"X3 Soundtrack", @"X3 Soundtrack", true,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2827, @"X3: A Sunny Place", @"x3tc DLC", true,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(2828, @"X3: Terran Conflict Russian", @"X3TC Russian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+            {
+                SteamApplication app = new SteamApplication(2820, @"X3: Terran Conflict", @"X3 Terran Conflict", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(2827, @"X3: A Sunny Place", @"x3tc DLC", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(2826, @"X3 Soundtrack", @"X3 Soundtrack", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(2821, @"X3: Terran Conflict content", @"X3 Terran Conflict content", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(2822, @"X3: Terran Conflict German", @"X3 Terran Conflict German", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(2823, @"X3: Terran Conflict French", @"X3 Terran Conflict French", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(2824, @"X3: Terran Conflict Italian", @"X3 Terran Conflict Italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(2825, @"X3: Terran Conflict English", @"X3 Terran Conflict English", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(2828, @"X3: Terran Conflict Russian", @"X3TC Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+
+                apps.Add(app);
+            }
             #endregion X3: Terran Conflict
 
+            #region RAGE
+            {
+                SteamApplication app = new SteamApplication(9200, @"RAGE", @"RAGE", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+                SteamDepot mainDepot, english, french, russian, czech, polish;
+
+                app.AddDepot(mainDepot = new SteamDepot(9201, @"RAGEDepot", @"RAGEDepot", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(9240, @"Rage Authority Pack DLC", @"Rage Authority Pack DLC", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(9241, @"Rage Sewers DLC", @"Rage Sewers DLC", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(9239, @"RAGE_EXEDepot", @"RAGE_EXEDepot", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(9238, @"RagePatch1Depot", @"RagePatch1Depot", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(english = new SteamDepot(9202, @"RAGE english", @"RAGE english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(french = new SteamDepot(9203, @"RAGE french", @"RAGE french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(9204, @"RAGE spanish", @"RAGE spanish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(new SteamDepot(9205, @"RAGE italian", @"RAGE italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(9206, @"RAGE german", @"RAGE german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(9207, @"RAGE Japanese", @"RAGE Japanese", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+                app.AddDepot(russian = new SteamDepot(9208, @"RAGE Russian", @"RAGE Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(czech = new SteamDepot(9209, @"RAGE Czech", @"RAGE Czech", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+                app.AddDepot(polish = new SteamDepot(9210, @"RAGE Polish", @"RAGE Polish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\rage\base\video\loadvideo_french.bik", mainDepot,
+                    new SteamDepot[] { french }));
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\rage\mp\base\video\loadvideo_french.bik", mainDepot,
+                    new SteamDepot[] { french }));
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\rage\base\english.streamed", english,
+                    new SteamDepot[] { russian, czech, polish }));
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\rage\mp\base\english.streamed", english,
+                    new SteamDepot[] { russian, czech, polish }));
+
+                apps.Add(app);
+            }
+            #endregion RAGE
+
             #region The Elder Scrolls V: Skyrim
-            apps.Add(new SteamApplication(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", "installscript.vdf",
-                CheckDepots_72850, GetFilesSize_72850, InstallApplication_72850));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72851, @"Skyrim Content", @"Skyrim Content", false,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72852, @"Skyrim exe", @"Skyrim exe", true,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72855, @"The Elder Scrolls V: Skyrim italian", @"Skyrim italian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72856, @"The Elder Scrolls V: Skyrim german", @"Skyrim german", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72857, @"The Elder Scrolls V: Skyrim spanish", @"Skyrim spanish", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72858, @"The Elder Scrolls V: Skyrim Polish", @"Skyrim Polish", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72859, @"The Elder Scrolls V: Skyrim Czech", @"Skyrim Czech", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72860, @"The Elder Scrolls V: Skyrim Russian", @"Skyrim Russian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(72861, @"The Elder Scrolls V: Skyrim Japanese", @"The Elder Scrolls V Skyrim Japanese", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
-            // "Skyrim Czech" and "Skyrim Polish" depots use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
-            // files from "Skyrim english" depot.
-            apps[apps.Count - 1].CustomObject = new String[] { @"common\Skyrim\Data\Skyrim - Voices.bsa", @"common\Skyrim\Data\Skyrim - VoicesExtra.bsa" };
+            {
+                SteamApplication app = new SteamApplication(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+                SteamDepot english, czech, polish;
+
+                app.AddDepot(new SteamDepot(72851, @"Skyrim Content", @"Skyrim Content", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(72852, @"Skyrim exe", @"Skyrim exe", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(english = new SteamDepot(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(72855, @"The Elder Scrolls V: Skyrim italian", @"Skyrim italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(72856, @"The Elder Scrolls V: Skyrim german", @"Skyrim german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(72857, @"The Elder Scrolls V: Skyrim spanish", @"Skyrim spanish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(polish = new SteamDepot(72858, @"The Elder Scrolls V: Skyrim Polish", @"Skyrim Polish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+                app.AddDepot(czech = new SteamDepot(72859, @"The Elder Scrolls V: Skyrim Czech", @"Skyrim Czech", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+                app.AddDepot(new SteamDepot(72860, @"The Elder Scrolls V: Skyrim Russian", @"Skyrim Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(new SteamDepot(72861, @"The Elder Scrolls V: Skyrim Japanese", @"The Elder Scrolls V Skyrim Japanese", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+
+                // "Skyrim Czech" and "Skyrim Polish" depots use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
+                // files from "Skyrim english" depot.
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\Skyrim\Data\Skyrim - Voices.bsa", english,
+                    new SteamDepot[] { polish, czech }));
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\Skyrim\Data\Skyrim - VoicesExtra.bsa", english,
+                    new SteamDepot[] { polish, czech }));
+
+                apps.Add(app);
+            }
             #endregion The Elder Scrolls V: Skyrim
 
+            #region Supreme Ruler: Cold War
+            {
+                SteamApplication app = new SteamApplication(73220, @"Supreme Ruler: Cold War", @"Supreme Ruler Cold War", null,
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(73221, @"Supreme Ruler Cold War content", @"Supreme Ruler Cold War content", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
+                    CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
+
+                apps.Add(app);
+            }
+            #endregion Supreme Ruler: Cold War
+
+            #region Dead Island
+            {
+                SteamApplication app = new SteamApplication(91310, @"Dead Island", @"Dead Island", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(91318, @"Dead Island Binaries", @"Dead Island Binaries", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91311, @"Dead Island GameContent", @"Dead Island GameContent", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91342, @"Dead Island: Ripper_2.0", @"Ripper_2.0", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91345, @"Dead Island: Bloodbath", @"Dead Island Bloodbath", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91346, @"Dead Island: Ryder", @"Dead Island Ryder", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91347, @"Dead Island SpeechRu", @"Dead Island SpeechRu", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture })); // maybe should be CultureInfo.GetCultureInfo("ru")
+                app.AddDepot(new SteamDepot(200931, @"DeadIslSndContent", @"DeadIslSndContent", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(201741, @"Dead Island Bloodbath VoiceOver Content", @"BloodbathEN", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(91312, @"Dead Island english", @"Dead Island english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(91313, @"Dead Island french", @"Dead Island french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(91314, @"Dead Island italian", @"Dead Island italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(91315, @"Dead Island german", @"Dead Island german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(91316, @"Dead Island spanish", @"Dead Island spanish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(new SteamDepot(91317, @"Dead Island Polish", @"Dead Island Polish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+                app.AddDepot(new SteamDepot(91341, @"Dead Island Czech", @"Dead Island Czech", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+                app.AddDepot(new SteamDepot(91343, @"Dead Island Russian", @"Dead Island Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(new SteamDepot(91348, @"Dead Island Japanese", @"Dead Island Japanese", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+                app.AddDepot(new SteamDepot(201742, @"Dead Island Russian Bloodbath DLC", @"BloodbathRU", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(new SteamDepot(201743, @"Dead Island Japanese Bloodbath DLC", @"BloodbathJP", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+
+                apps.Add(app);
+            }
+            #endregion Dead Island
+
             #region Terraria
-            apps.Add(new SteamApplication(105600, @"Terraria", @"Terraria", "installscript.vdf",
-                CheckDepots, GetFilesSize, InstallApplication));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(105601, @"TerrariaRelease", @"TerrariaRelease", false,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+            {
+                SteamApplication app = new SteamApplication(105600, @"Terraria", @"Terraria", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(105601, @"TerrariaRelease", @"TerrariaRelease", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+
+                apps.Add(app);
+            }
             #endregion Terraria
 
             #region X3: Albion Prelude
-            apps.Add(new SteamApplication(201310, @"X3: Albion Prelude", @"x3 terran conflict", "installscript-x3ap.vdf",
-                CheckDepots, GetFilesSize, InstallApplication));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201311, @"X3: Albion Prelude content", @"x3ap content", false,
-                new CultureInfo[] { CultureInfo.InvariantCulture }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201312, @"X3: Albion Prelude english", @"X3AP english", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201313, @"X3: Albion Prelude german", @"X3AP german", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201314, @"X3: Albion Prelude french", @"X3AP french", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201315, @"X3: Albion Prelude italian", @"X3AP italian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
-            apps[apps.Count - 1].AddDepot(new SteamDepot(201316, @"X3: Albion Prelude Russian", @"X3AP Russian", true,
-                new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+            {
+                SteamApplication app = new SteamApplication(201310, @"X3: Albion Prelude", @"x3 terran conflict", "installscript-x3ap.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(201311, @"X3: Albion Prelude content", @"x3ap content", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(201312, @"X3: Albion Prelude english", @"X3AP english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(201313, @"X3: Albion Prelude german", @"X3AP german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(201314, @"X3: Albion Prelude french", @"X3AP french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(201315, @"X3: Albion Prelude italian", @"X3AP italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(201316, @"X3: Albion Prelude Russian", @"X3AP Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+
+                apps.Add(app);
+            }
             #endregion X3: Albion Prelude
 
             // Find depots for all applications
@@ -283,8 +461,7 @@ namespace SteamGamesInstaller
         /// Checks depots.
         /// </summary>
         /// <param name="application">SteamApplication object.</param>
-        /// <param name="directories">Directories in current directory.</param>
-        private static void CheckDepots(SteamApplication application, DirectoryInfo[] directories)
+        private static void CheckDepots(SteamApplication application)
         {
             if (application.CheckState == CheckState.NotChecked)
             {
@@ -295,18 +472,38 @@ namespace SteamGamesInstaller
                 {
                     SteamDepot depot = application.GetDepot(i);
 
-                    if (depot.GetDirectoriesCount(SteamDepotFileTypes.Common) > 0)
+                    if (depot.CheckState == CheckState.NotChecked)
                     {
-                        depot.CheckState = CheckState.Installable;
-                        if (!depot.IsInvariant)
-                            isNonInvariantDepotExists = true;
-                    }
+                        if (depot.GetDirectoriesCount(SteamDepotFileTypes.Common) > 0 && depot.IsSharedFilesExists)
+                            depot.CheckState = CheckState.Installable;
+                        else
+                        {
+                            depot.CheckState = CheckState.NotInstallable;
 
-                    if (depot.CheckState != CheckState.Installable)
-                    {
-                        application.CheckState = CheckState.NotInstallable;
-                        if (!depot.IsOptional)
-                            isRequiredDepotNotExists = true;
+                            if (depot.SharedFilesCount > 0)
+                            {
+                                SteamDepotSharedFile[] sharedFiles = depot.GetSharedFiles();
+
+                                foreach (SteamDepotSharedFile sharedFile in sharedFiles)
+                                {
+                                    SteamDepot[] clientDepots = sharedFile.GetClientDepots();
+
+                                    foreach (SteamDepot clientDepot in clientDepots)
+                                        clientDepot.CheckState = CheckState.NotInstallable;
+                                }
+                            }
+                        }
+
+                        if (depot.CheckState == CheckState.Installable)
+                        {
+                            if (!depot.IsInvariant)
+                                isNonInvariantDepotExists = true;
+                        }
+                        else
+                        {
+                            if (!depot.IsOptional)
+                                isRequiredDepotNotExists = true;
+                        }
                     }
                 }
 
@@ -314,51 +511,6 @@ namespace SteamGamesInstaller
                     application.CheckState = CheckState.NotInstallable;
                 else
                     application.CheckState = CheckState.Installable;
-            }
-        }
-
-        /// <summary>
-        /// Checks depots for "The Elder Scrolls V: Skyrim".
-        /// </summary>
-        /// <param name="application">SteamApplication object.</param>
-        /// <param name="directories">Directories in current directory.</param>
-        private void CheckDepots_72850(SteamApplication application, DirectoryInfo[] directories)
-        {
-            if (application.CheckState == CheckState.NotChecked)
-            {
-                CheckDepots(application, directories);
-
-                // Application specific scenario
-                SteamDepot polish = application.GetDepotById(72858);
-                SteamDepot czech = application.GetDepotById(72859);
-
-                if (polish != null || czech != null)
-                {
-                    Boolean isFile1Exist = false;
-                    Boolean isFile2Exist = false;
-                    String file1RelativeName = ((String[])application.CustomObject)[0];
-                    String file2RelativeName = ((String[])application.CustomObject)[1];
-                    SteamDepotFile[] files = application.FilesMap.GetFiles(SteamDepotFileTypes.Any, CultureInfo.GetCultureInfo("en"));
-
-                    if (files != null)
-                    {
-                        foreach (SteamDepotFile file in files)
-                        {
-                            if (!isFile1Exist && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                                isFile1Exist = true;
-                            if (!isFile2Exist && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                                isFile2Exist = true;
-                            if (isFile1Exist && isFile2Exist)
-                                break;
-                        }
-
-                        if (!isFile1Exist || !isFile2Exist)
-                        {
-                            polish.CheckState = CheckState.NotInstallable;
-                            czech.CheckState = CheckState.NotInstallable;
-                        }
-                    }
-                }
             }
         }
 
@@ -375,6 +527,7 @@ namespace SteamGamesInstaller
         private Int64 GetFilesSize(SteamApplication application, InstallOptions installOptions)
         {
             Int64 size = 0L;
+
             if (installOptions.FilesType != SteamDepotFileTypes.None)
             {
                 SteamDepotFile[] files = application.GetFiles(installOptions);
@@ -383,54 +536,6 @@ namespace SteamGamesInstaller
                 {
                     foreach (SteamDepotFile file in files)
                         size += new FileInfo(file.FullName).Length;
-                }
-            }
-            return size;
-        }
-
-        /// <summary>
-        /// Returns size of "The Elder Scrolls V: Skyrim" files in bytes for specified installation options.
-        /// </summary>
-        /// <param name="application">SteamApplication object.</param>
-        /// <param name="installOptions">Installation options.</param>
-        /// <param name="filesMap">FilesMap object.</param>
-        /// <returns>Size of application files in bytes for specified installation options.</returns>
-        private Int64 GetFilesSize_72850(SteamApplication application, InstallOptions installOptions)
-        {
-            Int64 size = 0L;
-
-            if (installOptions.FilesType != SteamDepotFileTypes.None)
-            {
-                size = GetFilesSize(application, installOptions);
-
-                // Application specific scenario
-                if (CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("pl")) ||
-                    CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("cs")))
-                {
-                    SteamDepotFile file1 = null;
-                    SteamDepotFile file2 = null;
-                    String file1RelativeName = ((String[])application.CustomObject)[0];
-                    String file2RelativeName = ((String[])application.CustomObject)[1];
-                    SteamDepotFile[] files = application.FilesMap.GetFiles(installOptions.FilesType, CultureInfo.GetCultureInfo("en"));
-
-                    if (files != null)
-                    {
-                        foreach (SteamDepotFile file in files)
-                        {
-                            if (file1 == null && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                            {
-                                file1 = file;
-                                size += new FileInfo(file1.FullName).Length;
-                            }
-                            if (file2 == null && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                            {
-                                file2 = file;
-                                size += new FileInfo(file2.FullName).Length;
-                            }
-                            if (file1 != null && file2 != null)
-                                break;
-                        }
-                    }
                 }
             }
 
@@ -481,64 +586,6 @@ namespace SteamGamesInstaller
             return copiedFilesSize;
         }
 
-        /// <summary>
-        /// Installs "The Elder Scrolls V: Skyrim" using specified installation options.
-        /// </summary>
-        /// <param name="application">SteamApplication object.</param>
-        /// <param name="installOptions">InstallOptions object.</param>
-        /// <param name="filesSize">Size of files for installation. Method calculate this size if parameter equals to -1.</param>
-        /// <param name="worker">BackgroundWorker object.</param>
-        /// <returns>Size of installed files.</returns>
-        private Int64 InstallApplication_72850(SteamApplication application, InstallOptions installOptions, Int64 filesSize, BackgroundWorker worker)
-        {
-            Int64 installedFilesSize = 0L;
-
-            if (installOptions.FilesType != SteamDepotFileTypes.None)
-            {
-                if (filesSize == -1L)
-                    filesSize = application.GetFilesSize(application, installOptions);
-
-                installedFilesSize = InstallApplication(application, installOptions, filesSize, worker);
-
-                // Application specific scenario
-                if (!worker.CancellationPending)
-                {
-                    if (CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("pl")) ||
-                        CultureInfo.Equals(installOptions.ApplicationCulture, CultureInfo.GetCultureInfo("cs")))
-                    {
-                        SteamDepotFile file1 = null;
-                        SteamDepotFile file2 = null;
-                        String file1RelativeName = ((String[])application.CustomObject)[0];
-                        String file2RelativeName = ((String[])application.CustomObject)[1];
-                        SteamDepotFile[] files = application.FilesMap.GetFiles(installOptions.FilesType, CultureInfo.GetCultureInfo("en"));
-
-                        if (files != null)
-                        {
-                            foreach (SteamDepotFile file in files)
-                            {
-                                if (file1 == null && String.Compare(file.RelativeName, file1RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                                {
-                                    file1 = file;
-                                    installedFilesSize += SgiUtils.CopyFile(file1, Path.Combine(installOptions.InstallPath, file1RelativeName),
-                                        filesSize, installedFilesSize, worker);
-                                }
-                                if (file2 == null && String.Compare(file.RelativeName, file2RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
-                                {
-                                    file2 = file;
-                                    installedFilesSize += SgiUtils.CopyFile(file2, Path.Combine(installOptions.InstallPath, file2RelativeName),
-                                        filesSize, installedFilesSize, worker);
-                                }
-                                if (file1 != null && file2 != null)
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return installedFilesSize;
-        }
-
         #endregion Install application methods.
 
         private SteamApplication GetApplication(String applicationName)
@@ -572,11 +619,12 @@ namespace SteamGamesInstaller
         private List<SteamDepot> depots;
         private String installScriptName;
         private Object customObject;
+
         /// <summary>
         /// Files map for this application.
         /// Callers must not use this property directly! Use SteamApplication.FilesMap field instead.
         /// </summary>
-        private static FilesMap filesMap; // use staticly for memory economy
+        private static FilesMap filesMap; // used staticly for memory economy
 
         public SteamApplication(Int32 applicationId, String appName, String installDirectoryName, String installScriptFileName,
             CheckDepotsMethod checkDepotsMethod, GetFilesSizeMethod getFilesSizeMethod, InstallApplicationMethod installApplicationMethod)
@@ -704,7 +752,20 @@ namespace SteamGamesInstaller
             foreach (SteamDepot depot in depots)
                 depot.FindDepot(directories);
 
-            CheckDepots(this, directories);
+            CheckDepots(this);
+        }
+
+        public static void AddSharedFile(SteamDepotSharedFile sharedFile)
+        {
+            if (sharedFile == null)
+                throw new ArgumentNullException("sharedFile");
+
+            sharedFile.SourceDepot.AddSharedFile(sharedFile);
+
+            SteamDepot[] clientDepots = sharedFile.GetClientDepots();
+
+            foreach (SteamDepot clientDepot in clientDepots)
+                clientDepot.AddSharedFile(sharedFile);
         }
 
         public SteamDepotFile[] GetFiles(InstallOptions installOptions)
@@ -733,6 +794,7 @@ namespace SteamGamesInstaller
         private CheckState checkState;
         private Dictionary<Int32, DirectoryInfo> commonDirectories;
         private Dictionary<Int32, DirectoryInfo> fixesDirectories;
+        private List<SteamDepotSharedFile> sharedFiles;
 
         public SteamDepot(Int32 depotId, String depotName, String depotFileName, Boolean isDepotOptional, CultureInfo[] depotCultures)
         {
@@ -755,6 +817,7 @@ namespace SteamGamesInstaller
             checkState = CheckState.NotChecked;
             commonDirectories = new Dictionary<Int32, DirectoryInfo>(0);
             fixesDirectories = new Dictionary<Int32, DirectoryInfo>(0);
+            sharedFiles = new List<SteamDepotSharedFile>(0);
         }
 
         public Int32 Id
@@ -795,6 +858,52 @@ namespace SteamGamesInstaller
         {
             get { return checkState; }
             set { checkState = value; }
+        }
+
+        public void AddSharedFile(SteamDepotSharedFile sharedFile)
+        {
+            sharedFiles.Add(sharedFile);
+        }
+
+        public Int32 SharedFilesCount
+        {
+            get { return sharedFiles.Count; }
+        }
+
+        public SteamDepotSharedFile[] GetSharedFiles()
+        {
+            return sharedFiles.ToArray();
+        }
+
+        public Boolean IsSharedFilesExists
+        {
+            get
+            {
+                if (sharedFiles.Count == 0)
+                    return true;
+                else
+                {
+                    foreach (SteamDepotSharedFile sharedFile in sharedFiles)
+                    {
+                        Boolean isSharedFileFinded = false;
+                        SteamDepotFile[] depotFiles = sharedFile.SourceDepot.GetFiles(sharedFile.SourceDepot.GetLatestVersion(SteamDepotFileTypes.Common), SteamDepotFileTypes.Common);
+
+                        foreach (SteamDepotFile depotFile in depotFiles)
+                        {
+                            if (String.Compare(sharedFile.RelativeName, depotFile.RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                isSharedFileFinded = true;
+                                break;
+                            }
+                        }
+
+                        if (!isSharedFileFinded)
+                            return false;
+                    }
+
+                    return true;
+                }
+            }
         }
 
         public void FindDepot(DirectoryInfo[] directories)
@@ -922,36 +1031,62 @@ namespace SteamGamesInstaller
         }
 
         /// <summary>
-        /// Returns array with files in depot of specified version and type.
+        /// Returns array with depot files of specified version and type.
         /// </summary>
         /// <param name="filesVersion">Version of files.</param>
         /// <param name="filesType">Type of files.</param>
-        /// <returns>Array with files of specified version and type.</returns>
-        public FileInfo[] GetFiles(Int32 filesVersion, SteamDepotFileTypes filesType)
+        /// <returns>Array with depot files of specified version and type.</returns>
+        public SteamDepotFile[] GetFiles(Int32 filesVersion, SteamDepotFileTypes filesType)
         {
-            List<FileInfo> files = new List<FileInfo>();
+            List<SteamDepotFile> depotFiles = new List<SteamDepotFile>();
             Queue<DirectoryInfo> directoriesQueue = new Queue<DirectoryInfo>();
             DirectoryInfo directory = GetDirectory(filesVersion, filesType);
-            DirectoryInfo[] subDirectories;
-            FileInfo[] depotFiles;
+
+            // Add shared files from source depot
+            if (filesType == SteamDepotFileTypes.Common && sharedFiles.Count > 0)
+            {
+                foreach (SteamDepotSharedFile sharedFile in sharedFiles)
+                {
+                    if (sharedFile.SourceDepot != this)
+                    {
+                        SteamDepotFile depotFile = sharedFile.SourceDepot.GetFile(sharedFile.RelativeName, sharedFile.SourceDepot.GetLatestVersion(filesType), filesType);
+
+                        depotFile.SteamDepot = this;
+                        depotFiles.Add(depotFile);
+                    }
+                }
+            }
 
             do
             {
                 if (directoriesQueue.Count > 0)
                     directory = directoriesQueue.Dequeue();
 
-                depotFiles = directory.GetFiles();
+                FileInfo[] files = directory.GetFiles();
 
-                foreach (FileInfo file in depotFiles)
-                    files.Add(file);
+                foreach (FileInfo file in files)
+                    depotFiles.Add(new SteamDepotFile(file.FullName, filesVersion, filesType, this));
 
-                subDirectories = directory.GetDirectories();
+                DirectoryInfo[] subDirectories = directory.GetDirectories();
 
                 foreach (DirectoryInfo subDirectory in subDirectories)
                     directoriesQueue.Enqueue(subDirectory);
             } while (directoriesQueue.Count > 0);
 
-            return files.ToArray();
+            return depotFiles.ToArray();
+        }
+
+        private SteamDepotFile GetFile(String fileRelativeName, Int32 fileVersion, SteamDepotFileTypes fileType)
+        {
+            SteamDepotFile[] depotFiles = this.GetFiles(fileVersion, fileType);
+
+            foreach (SteamDepotFile depotFile in depotFiles)
+            {
+                if (String.Compare(fileRelativeName, depotFile.RelativeName, StringComparison.OrdinalIgnoreCase) == 0)
+                    return depotFile;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1134,21 +1269,17 @@ namespace SteamGamesInstaller
             if (depot == null)
                 throw new ArgumentNullException("depot");
 
-            FileInfo[] depotFiles = depot.GetFiles(filesVersion, filesType);
+            SteamDepotFile[] depotFiles = depot.GetFiles(filesVersion, filesType);
 
-            foreach (FileInfo file in depotFiles)
-                AddFile(file, filesVersion, filesType, depot);
+            foreach (SteamDepotFile depotFile in depotFiles)
+                AddFile(depotFile);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
-        public void AddFile(FileInfo file, Int32 fileVersion, SteamDepotFileTypes fileType, SteamDepot depot)
+        public void AddFile(SteamDepotFile depotFile)
         {
-            if (file == null)
-                throw new ArgumentNullException("file");
-            if (depot == null)
-                throw new ArgumentNullException("depot");
+            if (depotFile == null)
+                throw new ArgumentNullException("depotFile");
 
-            SteamDepotFile depotFile = new SteamDepotFile(file.FullName, fileVersion, fileType, depot);
             String relativeName = depotFile.RelativeName;
 
             if (files.ContainsKey(relativeName))
@@ -1238,21 +1369,117 @@ namespace SteamGamesInstaller
             else
                 return null;
         }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
+        public SteamDepotFile[][] GetSameFiles(SteamDepotFileTypes fileTypes)
+        {
+            if (fileTypes == SteamDepotFileTypes.None)
+                return null;
+
+            List<SteamDepotFile[]> result = new List<SteamDepotFile[]>();
+            SHA512Managed sha = new SHA512Managed();
+
+            foreach (List<SteamDepotFile> filesList in files.Values)
+            {
+                if (filesList.Count > 1)
+                {
+                    Dictionary<Int64, List<SteamDepotFile>> filesDict = new Dictionary<Int64, List<SteamDepotFile>>();
+                    Dictionary<Byte[], List<SteamDepotFile>> hashesDict = new Dictionary<Byte[], List<SteamDepotFile>>();
+
+                    foreach (SteamDepotFile depotFile in filesList)
+                    {
+                        if ((depotFile.FileType & fileTypes) != SteamDepotFileTypes.None)
+                        {
+                            FileInfo file = new FileInfo(depotFile.FullName);
+
+                            if (!filesDict.ContainsKey(file.Length))
+                                filesDict.Add(file.Length, new List<SteamDepotFile>(1));
+
+                            filesDict[file.Length].Add(depotFile);
+                        }
+                    }
+
+                    foreach (Int64 fileLength in filesDict.Keys)
+                    {
+                        if (filesDict[fileLength].Count > 1)
+                        {
+                            foreach (SteamDepotFile depotFile in filesDict[fileLength])
+                            {
+                                FileStream stream = File.OpenRead(depotFile.FullName);
+                                Byte[] hash1 = sha.ComputeHash(stream);
+                                Byte[] hash2 = null;
+
+                                stream.Close();
+
+                                foreach (Byte[] dictHash in hashesDict.Keys)
+                                {
+                                    Boolean isSameHash = true;
+
+                                    for (Int32 i = 0; i < hash1.Length; i++)
+                                    {
+                                        if (hash1[i] != dictHash[i])
+                                        {
+                                            isSameHash = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (isSameHash)
+                                    {
+                                        hash2 = dictHash;
+                                        break;
+                                    }
+                                }
+
+                                if (hash2 == null)
+                                {
+                                    hashesDict.Add(hash1, new List<SteamDepotFile>(1));
+                                    hash2 = hash1;
+                                }
+
+                                hashesDict[hash2].Add(depotFile);
+                            }
+                        }
+                    }
+
+                    foreach (Byte[] hash in hashesDict.Keys)
+                    {
+                        if (hashesDict[hash].Count > 1)
+                            result.Add(hashesDict[hash].ToArray());
+                    }
+                }
+            }
+
+            sha.Clear();
+
+            return result.ToArray();
+        }
     }
 
     public class SteamDepotFile
     {
         String name;
+        String relativeName;
         Int32 version;
         SteamDepotFileTypes type;
         SteamDepot depot;
 
         public SteamDepotFile(String fileFullName, Int32 fileVersion, SteamDepotFileTypes fileType, SteamDepot steamDepot)
         {
+            if (String.IsNullOrEmpty(fileFullName))
+                throw new ArgumentNullException("fileFullName");
+            if (steamDepot == null)
+                throw new ArgumentNullException("steamDepot");
+
             name = fileFullName;
             version = fileVersion;
             type = fileType;
             depot = steamDepot;
+
+            relativeName = name.Remove(0, depot.GetDirectory(version, type).FullName.Length);
+
+            if (relativeName[0] == Path.DirectorySeparatorChar)
+                relativeName = relativeName.Remove(0, 1);
         }
 
         public String FullName
@@ -1263,15 +1490,7 @@ namespace SteamGamesInstaller
 
         public String RelativeName
         {
-            get
-            {
-                String relativeName = name.Remove(0, depot.GetDirectory(version, type).FullName.Length);
-
-                if (relativeName[0] == Path.DirectorySeparatorChar)
-                    relativeName = relativeName.Remove(0, 1);
-
-                return relativeName;
-            }
+            get { return relativeName; }
         }
 
         public Int32 Version
@@ -1306,6 +1525,42 @@ namespace SteamGamesInstaller
         Fix = 0x2,
         Update = 0x4,
         Any = Common | Fix | Update
+    }
+
+    public class SteamDepotSharedFile
+    {
+        String relativeName;
+        SteamDepot source;
+        SteamDepot[] clients;
+
+        public SteamDepotSharedFile(String sharedFileRelativeName, SteamDepot sourceDepot, SteamDepot[] clientDepots)
+        {
+            if (String.IsNullOrEmpty(sharedFileRelativeName))
+                throw new ArgumentNullException("sharedFileRelativeName");
+            if (sourceDepot == null)
+                throw new ArgumentNullException("sourceDepot");
+            if (clientDepots == null || clientDepots.Length == 0)
+                throw new ArgumentNullException("clientDepots");
+
+            relativeName = sharedFileRelativeName;
+            source = sourceDepot;
+            clients = clientDepots;
+        }
+
+        public String RelativeName
+        {
+            get { return relativeName; }
+        }
+
+        public SteamDepot SourceDepot
+        {
+            get { return source; }
+        }
+
+        public SteamDepot[] GetClientDepots()
+        {
+            return clients;
+        }
     }
 
     public static class SgiUtils
@@ -2295,9 +2550,9 @@ namespace SteamGamesInstaller
                                 if (registryValueNode[0].Count > 0) // registryKeyValueNode.Value is language name
                                 {
                                     if (String.Compare(gameLanguage, registryValueNode.Value, StringComparison.OrdinalIgnoreCase) == 0)
-                                    {
                                         registryValueNode = registryValueNode[0];
-                                    }
+                                    else
+                                        registryValueNode = null;
                                 }
 
                                 if (registryValueNode != null)
@@ -2346,7 +2601,7 @@ namespace SteamGamesInstaller
                     break;
 
                 VdfAstNode registryValueNode = node[i];
-                String registryKey = @"HKEY_LOCAL_MACHINE\Software\Valve\Steam\Apps\" + application.Id.ToString();
+                String registryKey = @"HKEY_LOCAL_MACHINE\Software\Valve\Steam\Apps\" + application.Id.ToString(CultureInfo.InvariantCulture);
                 String processImage = null;
                 String commandLine = null;
                 Boolean isNoCleanUp = true;
