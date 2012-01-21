@@ -60,6 +60,12 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- SGI now search directories for depots in current directory and in directories of current directory (2 level depth).
+- E.Y.E added to games list.
+- Shared files for "X3AP russian" depot added to games list.
+- Added languages for Terraria.
+
+v1.0.4379.41550 "White Stone" Wednesday, 28 December 2011:
 - Fixed bug: if install script have language condition in registry node then keys will not saved in registry.
 - Implemented installation of shared files.
 - Added to games list: RAGE, Supreme Ruler: Cold War and Dead Island.
