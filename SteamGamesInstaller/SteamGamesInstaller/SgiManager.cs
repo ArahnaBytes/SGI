@@ -333,6 +333,8 @@ namespace SteamGamesInstaller
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(72852, @"Skyrim exe", @"Skyrim exe", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(202485, @"Skyrim High Resolution Texture Pack", @"Skyrim High Resolution Texture Pack", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(english = new SteamDepot(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", true,
                     new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
                 app.AddDepot(new SteamDepot(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", true,
@@ -479,6 +481,18 @@ namespace SteamGamesInstaller
                 apps.Add(app);
             }
             #endregion X3: Albion Prelude
+
+            #region The Elder Scrolls V: Skyrim Creation Kit
+            {
+                SteamApplication app = new SteamApplication(202480, @"The Elder Scrolls V: Skyrim Creation Kit", @"skyrim", null,
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(202481, @"CreationKit Main", @"CreationKit Main", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+
+                apps.Add(app);
+            }
+            #endregion The Elder Scrolls V: Skyrim Creation Kit
 
             // Find depots for all applications
             foreach (SteamApplication app in this.apps)

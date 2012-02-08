@@ -1,4 +1,4 @@
-Copyright © 2011, Mesenion (ArahnaBytes). All rights reserved.
+Copyright © 2011-2012, Mesenion (ArahnaBytes). All rights reserved.
 See copyright notice in SgiLicense.txt.
 
 
@@ -60,6 +60,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Added to games list: The Elder Scrolls V: Skyrim Creation Kit and Skyrim High Resolution Texture Pack.
+
+v1.0.4404.25 "White Stone" Sunday, 22 January 2012:
 - SGI now search directories for depots in current directory and in directories of current directory (2 level depth).
 - E.Y.E added to games list.
 - Shared files for "X3AP russian" depot added to games list.
