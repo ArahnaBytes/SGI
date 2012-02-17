@@ -391,13 +391,15 @@ namespace SteamGamesInstaller
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(91345, @"Dead Island: Bloodbath", @"Dead Island Bloodbath", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
-                app.AddDepot(new SteamDepot(91346, @"Dead Island: Ryder", @"Dead Island Ryder", true,
+                app.AddDepot(new SteamDepot(91346, @"Dead Island: Ryder White DLC", @"Dead Island Ryder", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(91347, @"Dead Island SpeechRu", @"Dead Island SpeechRu", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture })); // maybe should be CultureInfo.GetCultureInfo("ru")
                 app.AddDepot(new SteamDepot(200931, @"DeadIslSndContent", @"DeadIslSndContent", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(201741, @"Dead Island Bloodbath VoiceOver Content", @"BloodbathEN", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(201751, @"Dead Island: Ryder White DLC", @"RyderEN", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(91312, @"Dead Island english", @"Dead Island english", true,
                     new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
@@ -421,6 +423,10 @@ namespace SteamGamesInstaller
                     new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
                 app.AddDepot(new SteamDepot(201743, @"Dead Island Japanese Bloodbath DLC", @"BloodbathJP", true,
                     new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+                app.AddDepot(new SteamDepot(201752, @"Dead Island Russian Ryder White DLC", @"RyderRU", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(new SteamDepot(201753, @"Dead Island Japanese Ryder White DLC", @"Dead Island Japanese Ryder White DLC", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
 
                 apps.Add(app);
             }
@@ -438,6 +444,26 @@ namespace SteamGamesInstaller
             }
             #endregion E.Y.E
 
+            #region Kingdoms of Amalur: Reckoning
+            {
+                SteamApplication app = new SteamApplication(102500, @"Kingdoms of Amalur: Reckoning", @"KOAReckoning", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(102501, @"ReckoningDepot", @"ReckoningDepot", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(204600, @"Kingdoms of Amalur: Reckoning Weapon Packs", @"KOAR_WeaponPacks", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(102502, @"KOAReckoning english", @"KOAReckoning english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(102503, @"KOAReckoning german", @"KOAReckoning german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(102504, @"KOAReckoning french", @"KOAReckoning french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+
+                apps.Add(app);
+            }
+            #endregion Kingdoms of Amalur: Reckoning
+
             #region Terraria
             {
                 SteamApplication app = new SteamApplication(105600, @"Terraria", @"Terraria", "installscript.vdf",
@@ -450,6 +476,24 @@ namespace SteamGamesInstaller
                 apps.Add(app);
             }
             #endregion Terraria
+
+            #region L.A.Noire
+            {
+                SteamApplication app = new SteamApplication(110800, @"L.A.Noire", @"L.A.Noire", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(110801, @"LANMainContent", @"LANMainContent", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
+                    CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("it"),
+                    CultureInfo.GetCultureInfo("ru"), CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(new SteamDepot(110810, @"LA Noire Complete Edition", @"LANDLC", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(110802, @"LANExecutables", @"LANExecutables", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+
+                apps.Add(app);
+            }
+            #endregion L.A.Noire
 
             #region X3: Albion Prelude
             {
@@ -477,7 +521,6 @@ namespace SteamGamesInstaller
                 SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\x3 terran conflict\addon\mov\00244.dat", english,
                     new SteamDepot[] { russian }));
 
-
                 apps.Add(app);
             }
             #endregion X3: Albion Prelude
@@ -493,6 +536,27 @@ namespace SteamGamesInstaller
                 apps.Add(app);
             }
             #endregion The Elder Scrolls V: Skyrim Creation Kit
+
+            #region Crusader Kings II
+            {
+                SteamApplication app = new SteamApplication(203770, @"Crusader Kings II", @"Crusader Kings II", "Installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(203771, @"CKIIMain", @"CKIIMain", false,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"),
+                    CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(new SteamDepot(203772, @"Dynasty CoA Pack 1", @"Dynasty CoA Pack 1", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(203773, @"Mongol Graphics Pack", @"Mongol Graphics Pack", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(203774, @"English Music Pack", @"English Music Pack", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(203775, @"Songs of Faith", @"Songs of Faith", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+
+                apps.Add(app);
+            }
+            #endregion Crusader Kings II
 
             // Find depots for all applications
             foreach (SteamApplication app in this.apps)

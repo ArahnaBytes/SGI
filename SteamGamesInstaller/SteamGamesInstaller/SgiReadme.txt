@@ -60,6 +60,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Added to games list: Crusader Kings II, Kingdoms of Amalur: Reckoning, Dead Island: Ryder White DLC and L.A.Noire.
+
+v1.0.4421.34100 "White Stone" Wednesday, 08 February 2012:
 - Added to games list: The Elder Scrolls V: Skyrim Creation Kit and Skyrim High Resolution Texture Pack.
 
 v1.0.4404.25 "White Stone" Sunday, 22 January 2012:
