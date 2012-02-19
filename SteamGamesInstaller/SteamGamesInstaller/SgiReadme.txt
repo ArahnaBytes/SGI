@@ -60,6 +60,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed bug: if install script have %%CDKEY% variable then SGI will throw unresolved exception
+
+v1.0.4430.42566 "White Stone" Friday, 17 February 2012:
 - Added to games list: Crusader Kings II, Kingdoms of Amalur: Reckoning, Dead Island: Ryder White DLC and L.A.Noire.
 
 v1.0.4421.34100 "White Stone" Wednesday, 08 February 2012:

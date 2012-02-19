@@ -2558,6 +2558,7 @@ namespace SteamGamesInstaller
                                 break;
                             case 1: // %CDKEY%
                                 // TODO: ask user input key
+                                nodeValue = nodeValue.Insert(index, "0000-0000-0000-0000");
                                 break;
                             case 2: // %INSTALLDIR%
                                 nodeValue = nodeValue.Insert(index, this.installDir.FullName);
