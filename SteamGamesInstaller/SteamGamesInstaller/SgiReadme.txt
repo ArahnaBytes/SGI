@@ -60,6 +60,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed bug: if depots share file and one of these depots is not installable then all these depots will become not installable.
+
+v1.0.4512.37945 "White Stone" Wednesday, 09 May 2012:
 - Added to games list: Supreme Commander 2 and Risen 2.
 
 v1.0.4432.40726 "White Stone" Sunday, 19 February 2012:

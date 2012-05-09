@@ -695,10 +695,13 @@ namespace SteamGamesInstaller
 
                                 foreach (SteamDepotSharedFile sharedFile in sharedFiles)
                                 {
-                                    SteamDepot[] clientDepots = sharedFile.GetClientDepots();
+                                    if (sharedFile.SourceDepot == depot)
+                                    {
+                                        SteamDepot[] clientDepots = sharedFile.GetClientDepots();
 
-                                    foreach (SteamDepot clientDepot in clientDepots)
-                                        clientDepot.CheckState = CheckState.NotInstallable;
+                                        foreach (SteamDepot clientDepot in clientDepots)
+                                            clientDepot.CheckState = CheckState.NotInstallable;
+                                    }
                                 }
                             }
                         }
