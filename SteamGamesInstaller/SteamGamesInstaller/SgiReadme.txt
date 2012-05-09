@@ -60,7 +60,10 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
-- Fixed bug: if install script have %%CDKEY% variable then SGI will throw unresolved exception
+- Added to games list: Supreme Commander 2 and Risen 2.
+
+v1.0.4432.40726 "White Stone" Sunday, 19 February 2012:
+- Fixed bug: if install script have %CDKEY% variable then SGI will throw unresolved exception.
 
 v1.0.4430.42566 "White Stone" Friday, 17 February 2012:
 - Added to games list: Crusader Kings II, Kingdoms of Amalur: Reckoning, Dead Island: Ryder White DLC and L.A.Noire.

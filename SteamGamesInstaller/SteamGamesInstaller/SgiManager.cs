@@ -323,6 +323,105 @@ namespace SteamGamesInstaller
             }
             #endregion RAGE
 
+            #region Supreme Commander 2
+            {
+                SteamApplication app = new SteamApplication(40100, @"Supreme Commander 2", @"Supreme Commander 2", "installscript.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+                SteamDepot german, english, spanish, french, italian, russian, polish, japanese;
+
+                app.AddDepot(new SteamDepot(40135, @"Supreme Commander 2 - Infinite War Battle Pack One", @"Supreme Commander 2 - Infinite War Battle Pack One", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                //app.AddDepot(new SteamDepot(40125, @"Supreme Commander 2 - Infinite War Battle Pack 1 Mac", @"Supreme Commander 2 - Infinite War Battle Pack 1 Mac", true,
+                //    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40136, @"Supreme Commander 2 - Infinite War Tournament Maps", @"Supreme Commander 2 - Infinite War Tournament Maps", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40102, @"supreme commander 2 content", @"supreme commander 2 content", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40105, @"supreme commander 2 bin", @"supreme commander 2 bin", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                //app.AddDepot(new SteamDepot(40118, @"Supreme Commander 2 Mac Base", @"Supreme Commander 2 Mac Base", false,
+                //    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                //app.AddDepot(new SteamDepot(40229, @"Supreme Commander 2 Mac Binaries", @"Supreme Commander 2 Mac Binaries", false,
+                //    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(german = new SteamDepot(40103, @"Supreme Commander 2 German", @"Supreme Commander 2 German", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(english = new SteamDepot(40104, @"Supreme Commander 2 English", @"Supreme Commander 2 English", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(spanish = new SteamDepot(40106, @"Supreme Commander 2 Spanish", @"Supreme Commander 2 Spanish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(french = new SteamDepot(40107, @"Supreme Commander 2 French", @"Supreme Commander 2 French", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(italian = new SteamDepot(40108, @"Supreme Commander 2 Italian", @"Supreme Commander 2 Italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(russian = new SteamDepot(40109, @"Supreme Commander 2 Russian", @"Supreme Commander 2 Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(polish = new SteamDepot(40110, @"Supreme Commander 2 Polish", @"Supreme Commander 2 Polish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+                app.AddDepot(japanese = new SteamDepot(40111, @"Supreme Commander 2 Japanese", @"Supreme Commander 2 Japanese", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+                //app.AddDepot(new SteamDepot(40119, @"Supreme Commander 2 English Mac", @"Supreme Commander 2 English Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                //app.AddDepot(new SteamDepot(40122, @"supreme commander 2 mac app", @"supreme commander 2 mac app", true,
+                //    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                //app.AddDepot(new SteamDepot(40223, @"Supreme Commander 2 French Mac", @"Supreme Commander 2 French Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                //app.AddDepot(new SteamDepot(40224, @"Supreme Commander 2 German Mac", @"Supreme Commander 2 German Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                //app.AddDepot(new SteamDepot(40225, @"Supreme Commander 2 Polish Mac", @"Supreme Commander 2 Polish Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+                //app.AddDepot(new SteamDepot(40226, @"Supreme Commander 2 Italian Mac", @"Supreme Commander 2 Italian Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                //app.AddDepot(new SteamDepot(40227, @"Supreme Commander 2 Spanish Mac", @"Supreme Commander 2 Spanish Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                //app.AddDepot(new SteamDepot(40228, @"Supreme Commander 2 Russian Mac", @"Supreme Commander 2 Russian Mac", true,
+                //    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+
+                // "Supreme Commander 2 German", "Supreme Commander 2 Spanish", "Supreme Commander 2 French", "Supreme Commander 2 Italian",
+                // "Supreme Commander 2 Russian", "Supreme Commander 2 Polish" and (not sure) "Supreme Commander 2 Japanese" depots use
+                // "common\Supreme Commander 2\sounds\win\fmod\SC2_VO.fsb" file from "Supreme Commander 2 English" depot.
+                SteamApplication.AddSharedFile(new SteamDepotSharedFile(@"common\Supreme Commander 2\sounds\win\fmod\SC2_VO.fsb", english,
+                    new SteamDepot[] { german, spanish, french, italian, russian, polish, japanese }));
+
+                apps.Add(app);
+            }
+            #endregion Supreme Commander 2
+
+            #region Risen 2
+            {
+                SteamApplication app = new SteamApplication(40390, @"Risen 2", @"Risen 2", "40390_install.vdf",
+                    CheckDepots, GetFilesSize, InstallApplication);
+
+                app.AddDepot(new SteamDepot(40391, @"Risen 2 - Pirate's Clothes", @"risen2dlc1", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40392, @"Risen 2 - Treasure Isle", @"risen2dlc2", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40393, @"Risen 2 - Air Temple", @"risen2dlc3", true,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40394, @"risen2main", @"risen2main", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(203233, @"Risen2Binaries", @"Risen2Binaries", false,
+                    new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(40395, @"Risen 2 german", @"Risen 2 german", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(40396, @"Risen 2 english", @"Risen 2 english", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
+                app.AddDepot(new SteamDepot(40397, @"Risen 2 french", @"Risen 2 french", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(40398, @"Risen 2 italian", @"Risen 2 italian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(40399, @"Risen 2 spanish", @"Risen 2 spanish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                app.AddDepot(new SteamDepot(203230, @"Risen 2 Russian", @"Risen 2 Russian", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
+                app.AddDepot(new SteamDepot(203231, @"Risen 2 Czech", @"Risen 2 Czech", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("cs") }));
+                app.AddDepot(new SteamDepot(203232, @"Risen 2 Polish", @"Risen 2 Polish", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("pl") }));
+
+                apps.Add(app);
+            }
+            #endregion Risen 2
+
             #region The Elder Scrolls V: Skyrim
             {
                 SteamApplication app = new SteamApplication(72850, @"The Elder Scrolls V: Skyrim", @"Skyrim", "installscript.vdf",
