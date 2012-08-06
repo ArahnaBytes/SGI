@@ -434,6 +434,9 @@ namespace SteamGamesInstaller
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
                 app.AddDepot(new SteamDepot(202485, @"Skyrim High Resolution Texture Pack", @"Skyrim High Resolution Texture Pack", true,
                     new CultureInfo[] { CultureInfo.InvariantCulture }));
+                app.AddDepot(new SteamDepot(211720, @"The Elder Scrolls V: Skyrim Dawnguard DLC", @"The Elder Scrolls V Skyrim Test", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("en"), CultureInfo.GetCultureInfo("fr"), CultureInfo.GetCultureInfo("it"),
+                    CultureInfo.GetCultureInfo("de"), CultureInfo.GetCultureInfo("es") }));
                 app.AddDepot(english = new SteamDepot(72853, @"The Elder Scrolls V: Skyrim english", @"Skyrim english", true,
                     new CultureInfo[] { CultureInfo.GetCultureInfo("en") }));
                 app.AddDepot(new SteamDepot(72854, @"The Elder Scrolls V: Skyrim french", @"Skyrim french", true,
@@ -452,6 +455,17 @@ namespace SteamGamesInstaller
                     new CultureInfo[] { CultureInfo.GetCultureInfo("ru") }));
                 app.AddDepot(new SteamDepot(72861, @"The Elder Scrolls V: Skyrim Japanese", @"The Elder Scrolls V Skyrim Japanese", true,
                     new CultureInfo[] { CultureInfo.GetCultureInfo("ja") }));
+
+                #region The Elder Scrolls V: Skyrim Dawnguard DLC
+                app.AddDepot(new SteamDepot(211721, @"The Elder Scrolls V: Skyrim french Test", @"The Elder Scrolls V Skyrim french Test", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("fr") }));
+                app.AddDepot(new SteamDepot(211722, @"The Elder Scrolls V: Skyrim italian Test", @"The Elder Scrolls V Skyrim italian Test", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("it") }));
+                app.AddDepot(new SteamDepot(211723, @"The Elder Scrolls V: Skyrim german Test", @"The Elder Scrolls V Skyrim German Test", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("de") }));
+                app.AddDepot(new SteamDepot(211724, @"The Elder Scrolls V: Skyrim spanish Test", @"The Elder Scrolls V Skyrim Spanish Test", true,
+                    new CultureInfo[] { CultureInfo.GetCultureInfo("es") }));
+                #endregion The Elder Scrolls V: Skyrim Dawnguard DLC
 
                 // "Skyrim Czech" and "Skyrim Polish" depots use "common\Skyrim\Data\Skyrim - Voices.bsa" and "common\Skyrim\Data\Skyrim - VoicesExtra.bsa"
                 // files from "Skyrim english" depot.

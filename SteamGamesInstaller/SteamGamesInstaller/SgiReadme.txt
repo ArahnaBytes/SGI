@@ -60,6 +60,9 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Added to games list: The Elder Scrolls V: Skyrim Dawnguard DLC.
+
+v1.0.4512.39781 "White Stone" Wednesday, 09 May 2012:
 - Fixed bug: if depots share file and one of these depots is not installable then all these depots will become not installable.
 
 v1.0.4512.37945 "White Stone" Wednesday, 09 May 2012:
