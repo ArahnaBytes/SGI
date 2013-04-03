@@ -1,4 +1,4 @@
-Copyright © 2011-2012, Mesenion (ArahnaBytes). All rights reserved.
+Copyright © 2011-2013, Mesenion (ArahnaBytes). All rights reserved.
 See copyright notice in SgiLicense.txt.
 
 
@@ -23,7 +23,7 @@ format; or use syahmixp's GCF WinRAR Plugin (plugin have high probability to cor
 or use Nemesis's GCFScape (this program do not check control sums, so it useless for validating game files). After extracting
 all game files you should have in this example three directory, each of them will contain one ncf file and "common\game_name"
 directory with game files related only to this ncf file). SGI should be placed in directory which contains these three
-directories.
+directories or in parent directory.
 
 USING SHARED FILES FEATURE:
 This feature allows share files of one depot to other depots.
@@ -60,6 +60,14 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed bug: if install script does not have "IgnoreExitCode" token with value "1" in "Run Process" token tree and process
+returns not zero exit code, then throws unexpected exception.
+- If install script does not have "IgnoreExitCode" token with value "1" in "Run Process" token tree and process
+returns not zero exit code, then now shows warning dialog and install script continues execution.
+- In install script now supports "dword" token in "Registry" token tree with not integer values (creates binary registry key).
+- In install script now supports "process 1", "process 2", "command 1", "command 2" and so on tokens in "Run Process" token tree.
+
+v1.0.4601.32162 "White Stone" Monday, 06 August 2012:
 - Added to games list: The Elder Scrolls V: Skyrim Dawnguard DLC.
 
 v1.0.4512.39781 "White Stone" Wednesday, 09 May 2012:

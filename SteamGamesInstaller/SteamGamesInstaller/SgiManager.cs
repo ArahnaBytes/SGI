@@ -16,6 +16,7 @@ using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Text;
 using Microsoft.Win32;
+using System.Windows.Forms;
 
 namespace SteamGamesInstaller
 {
@@ -2788,11 +2789,17 @@ namespace SteamGamesInstaller
                                     {
                                         Int32 integerValue;
 
-                                        if (Int32.TryParse(registryValueNode[0].Value, out integerValue)) // TODO: dword may mean dword or data, so we should parse value (see decrypted appinfo.vdf)
+                                        // dword may mean dword or binary, so we should parse value (not sure about this)
+                                        if (Int32.TryParse(registryValueNode[0].Value, out integerValue))
+                                        {
                                             value = integerValue;
+                                            registryValueKind = RegistryValueKind.DWord;
+                                        }
                                         else
-                                            value = null;
-                                        registryValueKind = RegistryValueKind.DWord;
+                                        {
+                                            value = Encoding.UTF8.GetBytes(registryValueNode[0].Value);
+                                            registryValueKind = RegistryValueKind.Binary;
+                                        }
                                     }
                                     else
                                     {
@@ -2821,8 +2828,8 @@ namespace SteamGamesInstaller
 
                 VdfAstNode registryValueNode = node[i];
                 String registryKey = @"HKEY_LOCAL_MACHINE\Software\Valve\Steam\Apps\" + application.Id.ToString(CultureInfo.InvariantCulture);
-                String processImage = null;
-                String commandLine = null;
+                Dictionary<Int32, String> processImages = null;
+                Dictionary<Int32, String> commandLines = null;
                 Boolean isNoCleanUp = true;
                 Boolean isIgnoreExitCode = false;
 
@@ -2830,17 +2837,39 @@ namespace SteamGamesInstaller
                 {
                     if (String.Compare(registryValueNode[j].Value, "HasRunKey", StringComparison.OrdinalIgnoreCase) == 0)
                         registryKey = registryValueNode[j][0].Value;
-                    else if (String.Compare(registryValueNode[j].Value, "process 1", StringComparison.OrdinalIgnoreCase) == 0)
-                        processImage = registryValueNode[j][0].Value;
-                    else if (String.Compare(registryValueNode[j].Value, "command 1", StringComparison.OrdinalIgnoreCase) == 0)
-                        commandLine = registryValueNode[j][0].Value;
+                    else if (registryValueNode[j].Value.IndexOf("process") == 0)
+                    {
+                        Int32 integerValue;
+                        String[] processString = registryValueNode[j].Value.Split(new Char[] { }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (processString.Length == 2 && Int32.TryParse(processString[1], out integerValue))
+                        {
+                            if (processImages == null)
+                                processImages = new Dictionary<Int32, String>(1);
+
+                            processImages.Add(integerValue, registryValueNode[j][0].Value);
+                        }
+                    }
+                    else if (registryValueNode[j].Value.IndexOf("command") == 0)
+                    {
+                        Int32 integerValue;
+                        String[] commandString = registryValueNode[j].Value.Split(new Char[] { }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (commandString.Length == 2 && Int32.TryParse(commandString[1], out integerValue))
+                        {
+                            if (commandLines == null)
+                                commandLines = new Dictionary<Int32, String>(1);
+
+                            commandLines.Add(integerValue, registryValueNode[j][0].Value);
+                        }
+                    }
                     else if (String.Compare(registryValueNode[j].Value, "NoCleanUp", StringComparison.OrdinalIgnoreCase) == 0)
                         isNoCleanUp = registryValueNode[j][0].GetValueAsBoolean();
                     else if (String.Compare(registryValueNode[j].Value, "IgnoreExitCode", StringComparison.OrdinalIgnoreCase) == 0)
                         isIgnoreExitCode = registryValueNode[j][0].GetValueAsBoolean();
                 }
 
-                if (!String.IsNullOrEmpty(registryKey) && !String.IsNullOrEmpty(processImage))
+                if (!String.IsNullOrEmpty(registryKey) && processImages != null)
                 {
                     RegistryKey key = SgiUtils.RegistryCreateKey(registryKey, RegistryView.Registry32);
 
@@ -2850,38 +2879,41 @@ namespace SteamGamesInstaller
 
                         if (keyValue == null || (keyValue != null && (keyValue is Int32) && (Int32)keyValue != 1))
                         {
-                            Process process = null;
-
-                            if (!String.IsNullOrEmpty(commandLine))
-                                process = Process.Start(processImage, commandLine);
-                            else
-                                process = Process.Start(processImage);
-
-                            if (process != null)
+                            foreach (Int32 processNumber in processImages.Keys)
                             {
-                                // Wait for the associated process to exit or cancelation of worker thread
-                                while (!process.WaitForExit(200) && (worker == null || !worker.CancellationPending)) { };
+                                Process process = null;
+                                String commandLine;
 
-                                if (worker != null && worker.CancellationPending) // TODO: maybe worth to ask user what to do with process
-                                    process.Kill();
+                                if (commandLines.TryGetValue(processNumber, out commandLine))
+                                    process = Process.Start(processImages[processNumber], commandLine);
                                 else
+                                    process = Process.Start(processImages[processNumber]);
+
+                                if (process != null)
                                 {
-                                    if (!isIgnoreExitCode && process.ExitCode != 0)
-                                    {
-                                        process.Close();
-                                        worker.CancelAsync();
-                                        throw new WarningException(String.Format(CultureInfo.InvariantCulture,
-                                            "{0} exited with {1} error code!\nExecuting {2} will terminated!",
-                                            processImage, process.ExitCode, valveDataFile.FullName));
-                                    }
+                                    // Wait for the associated process to exit or cancelation of worker thread
+                                    while (!process.WaitForExit(200) && (worker == null || !worker.CancellationPending)) { };
+
+                                    if (worker != null && worker.CancellationPending) // TODO: maybe worth to ask user what to do with process
+                                        process.Kill();
                                     else
-                                        key.SetValue(registryValueNode.Value, 1, RegistryValueKind.DWord);
+                                    {
+                                        if (!isIgnoreExitCode && process.ExitCode != 0)
+                                        {
+                                            MessageBox.Show(String.Format(CultureInfo.InvariantCulture,
+                                                "{0} exited with {1} error code!\nInstall script: {2}",
+                                                processImages[processNumber], process.ExitCode, valveDataFile.FullName),
+                                                "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        }
+                                        else
+                                            key.SetValue(registryValueNode.Value, 1, RegistryValueKind.DWord);
 
-                                    if (!isNoCleanUp) // TODO: dunno what to do with this
-                                    { }
+                                        if (!isNoCleanUp) // TODO: dunno what to do with this
+                                        { }
+                                    }
+
+                                    process.Close();
                                 }
-
-                                process.Close();
                             }
                         }
                     }
