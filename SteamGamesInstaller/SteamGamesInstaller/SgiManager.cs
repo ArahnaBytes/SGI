@@ -1,10 +1,13 @@
 ﻿// This file is subject of copyright notice which described in SgiLicense.txt file.
 // Initial contributors of this source code (SgiManager.cs): Morrolan e'Drien (Castle Black) and Mesenion (ArahnaBytes). Other contributors should be mentioned in comments.
 
+using Microsoft.Win32;
+using SteamGamesInstaller.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,7 +18,6 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Security.Permissions;
 using System.Text;
-using Microsoft.Win32;
 using System.Windows.Forms;
 
 namespace SteamGamesInstaller
@@ -2259,9 +2261,9 @@ namespace SteamGamesInstaller
     [SuppressUnmanagedCodeSecurity]
     internal static class UnsafeNativeMethods
     {
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
         internal static extern Int32 RegOpenKeyEx(IntPtr baseKeyHandle, String subkey, Int32 reserved, Int32 desired, out Int32 result);
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
         internal static extern Int32 RegCreateKeyEx(IntPtr baseKeyHandle, String subkey, Int32 reserved, IntPtr keyClassType,
             Int32 options, Int32 desired, IntPtr securityAttributes, out Int32 result, out RegistryResultDisposition disposition);
     }
@@ -2269,8 +2271,9 @@ namespace SteamGamesInstaller
     [SuppressUnmanagedCodeSecurity]
     internal static class SafeNativeMethods
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2205:UseManagedEquivalentsOfWin32Api"), // WTF?! System.Environment.GetFolderPath method functioanlity in .NET 3.5 is not equal to native SHGetFolderPath
-        DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        [SuppressMessage("Microsoft.Usage", "CA2205:UseManagedEquivalentsOfWin32Api"), // WTF?! System.Environment.GetFolderPath method functioanlity in .NET 3.5 is not equal to native SHGetFolderPath
+         SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule"),
+         DllImport("shell32.dll", CharSet = CharSet.Unicode)]
         internal static extern Int32 SHGetFolderPath(IntPtr hwndOwner, Int32 nFolder, IntPtr hToken, Int32 dwFlags, StringBuilder lpszPath);
     }
 
@@ -2837,7 +2840,7 @@ namespace SteamGamesInstaller
                 {
                     if (String.Compare(registryValueNode[j].Value, "HasRunKey", StringComparison.OrdinalIgnoreCase) == 0)
                         registryKey = registryValueNode[j][0].Value;
-                    else if (registryValueNode[j].Value.IndexOf("process") == 0)
+                    else if (registryValueNode[j].Value.IndexOf("process", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         Int32 integerValue;
                         String[] processString = registryValueNode[j].Value.Split(new Char[] { }, StringSplitOptions.RemoveEmptyEntries);
@@ -2850,7 +2853,7 @@ namespace SteamGamesInstaller
                             processImages.Add(integerValue, registryValueNode[j][0].Value);
                         }
                     }
-                    else if (registryValueNode[j].Value.IndexOf("command") == 0)
+                    else if (registryValueNode[j].Value.IndexOf("command", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         Int32 integerValue;
                         String[] commandString = registryValueNode[j].Value.Split(new Char[] { }, StringSplitOptions.RemoveEmptyEntries);
@@ -2900,10 +2903,16 @@ namespace SteamGamesInstaller
                                     {
                                         if (!isIgnoreExitCode && process.ExitCode != 0)
                                         {
-                                            MessageBox.Show(String.Format(CultureInfo.InvariantCulture,
-                                                "{0} exited with {1} error code!\nInstall script: {2}",
-                                                processImages[processNumber], process.ExitCode, valveDataFile.FullName),
-                                                "Warning!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                            MessageBoxOptions mbOptions = 0;
+
+                                            if (CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft)
+                                                mbOptions = MessageBoxOptions.RtlReading | MessageBoxOptions.RightAlign;
+
+                                            MessageBox.Show(String.Format(CultureInfo.CurrentUICulture,
+                                                Resources.ExecuteInstallScriptRunProcessNodeErrorMessage,
+                                                processImages[processNumber], process.ExitCode, Environment.NewLine, valveDataFile.FullName),
+                                                Resources.WarningMessage, MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                                                MessageBoxDefaultButton.Button1, mbOptions);
                                         }
                                         else
                                             key.SetValue(registryValueNode.Value, 1, RegistryValueKind.DWord);

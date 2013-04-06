@@ -132,6 +132,9 @@
   <data name="ErrorMessage" xml:space="preserve">
     <value>Error!</value>
   </data>
+  <data name="ExecuteInstallScriptRunProcessNodeErrorMessage" xml:space="preserve">
+    <value>{0} exited with {1} error code!{2}Install script: {3}</value>
+  </data>
   <data name="FreeSpaceMessage" xml:space="preserve">
     <value> (your {0} drive has only {1} MB of free disk space available)</value>
   </data>
@@ -146,5 +149,8 @@
   </data>
   <data name="StackTraceMessage" xml:space="preserve">
     <value>Stack trace:</value>
+  </data>
+  <data name="WarningMessage" xml:space="preserve">
+    <value>Warning!</value>
   </data>
 </root>

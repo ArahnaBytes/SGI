@@ -19,8 +19,11 @@
       (for example 'FileName' -> 'Filename').
     -->
     <Recognized>
+      <Word>AST</Word>
+      <Word>CST</Word>
       <Word>ncf</Word>
-      <Word>sgi</Word>
+      <Word>SGI</Word>
+      <Word>OEM</Word>
       <Word>utils</Word>
       <Word>vdf</Word>
     </Recognized>

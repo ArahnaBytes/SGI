@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Mesenion (ArahnaBytes)")]
 [assembly: AssemblyProduct("SteamGamesInstaller")]
-[assembly: AssemblyCopyright("Copyright © 2011-2012, Mesenion (ArahnaBytes)")]
+[assembly: AssemblyCopyright("Copyright © 2011-2013, Mesenion (ArahnaBytes)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

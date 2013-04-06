@@ -60,6 +60,10 @@ to save such files in the same directory.
 CHANGELOG:
 
 1.0.*
+- Fixed crash: missed reference to System.Windows.Forms during compilation of SgiManager.cs.
+- Solution converted to Visual Studio 2012.
+
+v1.0.4841.41005 "White Stone" Wednesday, 03 April 2013:
 - Fixed bug: if install script does not have "IgnoreExitCode" token with value "1" in "Run Process" token tree and process
 returns not zero exit code, then throws unexpected exception.
 - If install script does not have "IgnoreExitCode" token with value "1" in "Run Process" token tree and process

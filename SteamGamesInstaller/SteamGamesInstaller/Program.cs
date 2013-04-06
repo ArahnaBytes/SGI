@@ -1,13 +1,13 @@
 ﻿// This file is subject of copyright notice which described in SgiLicense.txt file.
 // Authors of this source code (Program.cs): Mesenion (ArahnaBytes). Other contributors should be mentioned in comments.
 
+using SteamGamesInstaller.Properties;
 using System;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using SteamGamesInstaller.Properties;
 
 namespace SteamGamesInstaller
 {
@@ -37,7 +37,7 @@ namespace SteamGamesInstaller
         /// replaces first version stump after "CHANGELOG:" phrase with assembly version, version name and current date.
         /// </summary>
         /// <param name="args">Arguments in command line.</param>
-        /// <returns>Returns true if if command line have /fixchangelogversion argument.</returns>
+        /// <returns>Returns true if command line have /fixchangelogversion argument.</returns>
         private static Boolean FixChangeLogVersion(String[] args)
         {
             String readmeFileName = Path.Combine(Environment.CurrentDirectory, "SgiReadme.txt");

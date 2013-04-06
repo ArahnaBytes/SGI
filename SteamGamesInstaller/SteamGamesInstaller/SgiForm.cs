@@ -53,7 +53,10 @@ namespace SteamGamesInstaller
             managerAssembly = CompileManagerAssembly();
 
             if (managerAssembly == null)
+            {
                 this.Close();
+                return;
+            }
 #endif
             installDirectoryTextBox.Text = GetSteamAppsDirectory();
             CreateManager();
@@ -136,7 +139,7 @@ namespace SteamGamesInstaller
                     executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked }, CultureInfo.InvariantCulture, null);
 #else
                 Object options = new InstallOptions(steamApplicationsComboBox.Text, installDirectoryTextBox.Text, applicationLanguageComboBox.Text,
-                executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked);
+                    executeInstallScriptCheckBox.Checked, installApplicationCheckBox.Checked, installFixesCheckBox.Checked);
 #endif
 
                 worker.RunWorkerAsync(options);
@@ -202,7 +205,8 @@ namespace SteamGamesInstaller
         private Assembly CompileManagerAssembly()
         {
             CompilerResults results = null;
-            CompilerParameters parameters = new CompilerParameters(new String[] { "System.dll", "System.Core.dll" });
+            CompilerParameters parameters = new CompilerParameters(new String[] { "System.dll", "System.Core.dll", "System.Windows.Forms.dll",
+                Assembly.GetExecutingAssembly().Location});
 
             parameters.GenerateInMemory = true;
             parameters.TempFiles = new TempFileCollection(currentProcessDirectory.FullName, false);
